@@ -38,7 +38,7 @@ uv run streamlit run app/dashboard.py
 
 Tests: `uv run pytest`.  Demo walkthrough + pitch: [`docs/DEMO.md`](docs/DEMO.md).
 
-Jury-facing landing page (static, no build): `python3 -m http.server 4173 --directory web` then open `http://localhost:4173`. See [`web/README.md`](web/README.md).
+Jury-facing landing page (Tailwind v4 + DaisyUI, `styles.css` prebuilt and committed): `python3 -m http.server 4173 --directory web` then open `http://localhost:4173`. Deployed to GitHub Pages on every push to `web/**`. See [`web/README.md`](web/README.md).
 
 ## Pipeline
 

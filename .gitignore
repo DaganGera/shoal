@@ -23,6 +23,10 @@ __pycache__/
 /.claude/
 /skills-lock.json
 
+# landing-page build toolchain: fetched by web/build.sh, ~110 MB, never committed.
+# The built web/styles.css IS committed so GitHub Pages needs no build step.
+/web/.cache/
+
 # keep the directory structure and any committed fixtures
 !/data/.gitkeep
 !/weights/.gitkeep

@@ -111,12 +111,16 @@ def visibility_chart(run, name):
     fig.savefig(OUT / name, facecolor=INK, bbox_inches="tight", pad_inches=0.15)
     plt.close(fig)
 
-# --- video: tight ~9s 720p loop from the reef_clear annotated output ---
+# --- video: tight ~9s 720p loop from the reef_clear annotated output, plus a
+#     poster frame so the hero <video> is never blank before it plays ---
 def clip_loop(run, name, start, dur):
     src = ROOT / "outputs" / run / "annotated.mp4"
     subprocess.run(["ffmpeg","-nostdin","-v","error","-y","-ss",str(start),"-t",str(dur),"-i",str(src),
         "-vf","scale=960:-2","-c:v","libx264","-pix_fmt","yuv420p","-movflags","+faststart","-preset","veryfast","-crf","26","-an",
         str(OUT / name)], check=True)
+    poster = OUT / (Path(name).stem + "_poster.jpg")
+    subprocess.run(["ffmpeg","-nostdin","-v","error","-y","-i",str(OUT / name),
+        "-frames:v","1","-q:v","3", str(poster)], check=True)
 
 # anemone_static has the steadiest camera, so its residency map is the most legible
 dwell_an = residency("anemone_static", "anemone_static.mp4", 300, "residency.png")

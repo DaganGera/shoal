@@ -1,6 +1,6 @@
 """SHOAL dashboard (plan §11.1).
 
-Reads a completed run directory (``outputs/<run_id>/``) — it never runs the
+Reads a completed run directory (``outputs/<run_id>/``). It never runs the
 pipeline itself, so every number shown was computed and cached by ``shoal.pipeline``
 and traces to that run's ``run.json``.
 
@@ -35,6 +35,31 @@ OUTPUTS = REPO_ROOT / "outputs"
 UPLOAD_DIR = REPO_ROOT / "data" / "clips" / "uploads"
 
 st.set_page_config(page_title="SHOAL", layout="wide", page_icon="🐟")
+
+# Visual pass, matched to the landing page (web/). Colours, fonts and radius come
+# from .streamlit/config.toml; this only trims Streamlit chrome and tightens a
+# few components. Every rule degrades to a no-op if a selector moves.
+st.markdown(
+    """
+    <style>
+      [data-testid="stToolbar"], [data-testid="stDecoration"], #MainMenu, footer { display: none !important; }
+      .block-container { padding-top: 2.6rem; padding-bottom: 3rem; max-width: 1440px; }
+      h1 { letter-spacing: -0.021em; font-weight: 600; }
+      h2, h3, h4 { letter-spacing: -0.014em; }
+      .stTabs [data-baseweb="tab-list"] { gap: 0.15rem; border-bottom: 1px solid #26333b; }
+      .stTabs [data-baseweb="tab"] { padding: 0.45rem 0.85rem; font-size: 0.88rem; }
+      [data-testid="stMetric"] {
+        background: #121a22; border: 1px solid #222e37;
+        border-radius: 10px; padding: 0.85rem 1rem;
+      }
+      [data-testid="stMetricValue"] { font-size: 1.55rem; font-weight: 500; }
+      [data-testid="stMetricLabel"] { opacity: 0.75; }
+      section[data-testid="stSidebar"] { border-right: 1px solid #222e37; }
+      hr { margin: 0.9rem 0; border-color: #222e37; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 
 # --------------------------------------------------------------------------- #
@@ -84,8 +109,8 @@ def _np_to_data_uri(rgb: np.ndarray) -> str:
 
 def units_note(scale_px_per_m: float | None) -> str:
     if scale_px_per_m:
-        return f"scale set: {scale_px_per_m:.1f} px/m — metre values shown alongside px"
-    return "no scale supplied — distances in **pixels**, speeds in **px/s** and **body-lengths/s**"
+        return f"scale set: {scale_px_per_m:.1f} px/m, so metre values are shown alongside px"
+    return "no scale supplied, so distances are in **pixels** and speeds in **px/s** and **body-lengths/s**"
 
 
 def run_pipeline_ui(clip_path: Path, run_id: str, max_frames: int | None,
@@ -136,10 +161,9 @@ with st.sidebar:
         up = st.file_uploader("Video file", type=["mp4", "mov", "avi", "mkv", "webm", "m4v"])
         path_in = st.text_input("...or a path already on disk",
                                 placeholder="data/clips/reef_clear.mp4")
-        c1, c2 = st.columns(2)
-        quick = c1.checkbox("Quick preview", value=True,
+        quick = st.checkbox("Quick preview", value=True,
                             help="cap at the first 150 frames for a fast result")
-        dev = c2.selectbox("Device", ["auto", "cuda", "cpu"], index=0)
+        dev = st.selectbox("Device", ["auto", "cuda", "cpu"], index=0)
         do_abl = st.checkbox("Also run the restoration A/B", value=False,
                              help="adds ~40 s; the A/B tab needs this")
         if st.button("Run pipeline", type="primary", width="stretch"):
@@ -196,7 +220,7 @@ with st.sidebar:
             f"{k} {v}" for k, v in list(pv.items())[:6]))
 
 
-st.title(f"SHOAL — {Path(R['clip']).name}")
+st.title(f"SHOAL  ·  {Path(R['clip']).name}")
 tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(
     ["1 · Live / Playback", "2 · Visibility & Restoration", "3 · Trajectories",
      "4 · Behaviour", "5 · Ecology", "6 · Benchmark", "7 · Report"]
@@ -204,7 +228,7 @@ tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(
 
 
 # --------------------------------------------------------------------------- #
-# tab 1 — live / playback
+# tab 1: live / playback
 # --------------------------------------------------------------------------- #
 with tab1:
     cam = R["camera_motion"]
@@ -235,7 +259,7 @@ with tab1:
 
 
 # --------------------------------------------------------------------------- #
-# tab 2 — visibility & restoration
+# tab 2: visibility and restoration
 # --------------------------------------------------------------------------- #
 with tab2:
     vis = run["visibility"]
@@ -246,15 +270,15 @@ with tab2:
     else:
         prov = R["visibility"].get("provisional", True)
         if prov:
-            st.warning("Visibility calibration is **provisional** — run `uv run shoal-calibrate`. "
+            st.warning("Visibility calibration is **provisional**. Run `uv run shoal-calibrate`. "
                        "Scores are still consistent within this clip.")
         st.markdown("#### Before / after restoration")
         st.caption("The restoration chain is applied here on demand so you can inspect any frame.")
         fidx = st.slider("frame", int(vis["frame"].min()), int(vis["frame"].max()),
                          int(vis.loc[vis["visibility_score"].idxmin(), "frame"]))
         vrow = vis.iloc[(vis["frame"] - fidx).abs().idxmin()]
-        st.caption(f"frame {fidx}: visibility score **{vrow['visibility_score']:.2f}** "
-                   f"— gate is {gate:.2f}, so restoration "
+        st.caption(f"frame {fidx}: visibility score **{vrow['visibility_score']:.2f}**, "
+                   f"gate is {gate:.2f}, so restoration "
                    f"**{'fires' if vrow['visibility_score'] < gate else 'does not fire'}** here")
         bgr = None
         cap = cv2.VideoCapture(R["clip"])
@@ -281,7 +305,7 @@ with tab2:
         fig.add_scatter(x=below["timestamp"], y=below["visibility_score"], mode="markers",
                         marker=dict(color="crimson", size=5), name=f"{len(below)} frames restored")
         fig.update_layout(height=280, yaxis_range=[0, 1], xaxis_title="time (s)",
-                          yaxis_title="visibility (0–1)", margin=dict(l=0, r=0, t=10, b=0))
+                          yaxis_title="visibility (0 to 1)", margin=dict(l=0, r=0, t=10, b=0))
         st.plotly_chart(fig, width="stretch")
         with st.expander("visibility components (raw)"):
             comp_cols = [c for c in vis.columns if c.startswith("raw_")]
@@ -305,7 +329,7 @@ with tab2:
         else:
             m[2].metric("mAP@0.5", "n/a", help="no ground truth for this clip")
         m[3].metric("enhance time / frame", f"{abl['enhance_ms_mean']:.1f} ms",
-                    help="target < 8 ms at 720p (plan §4.2) — measured, not quoted")
+                    help="target < 8 ms at 720p (plan §4.2); this is measured, not quoted")
 
         bars = pd.DataFrame({
             "condition": ["raw", "restored"],
@@ -331,7 +355,7 @@ with tab2:
 
 
 # --------------------------------------------------------------------------- #
-# tab 3 — trajectories
+# tab 3: trajectories
 # --------------------------------------------------------------------------- #
 with tab3:
     cam = R["camera_motion"]
@@ -367,7 +391,7 @@ with tab3:
     with c1:
         st.markdown("**Activity nodes** (DBSCAN on stop points)")
         if nodes.empty:
-            st.caption("no activity nodes — fish did not dwell long enough to form stop clusters "
+            st.caption("no activity nodes: fish did not dwell long enough to form stop clusters "
                        "(expected for a short clip of continuously-cruising fish)")
         else:
             st.dataframe(nodes, width="stretch", hide_index=True)
@@ -387,7 +411,7 @@ with tab3:
 
 
 # --------------------------------------------------------------------------- #
-# tab 4 — behaviour
+# tab 4: behaviour
 # --------------------------------------------------------------------------- #
 with tab4:
     st.info("Phase 1 ships the **rule-based** classifier with cut-points from this clip's own "
@@ -420,12 +444,12 @@ with tab4:
 
 
 # --------------------------------------------------------------------------- #
-# tab 5 — ecology
+# tab 5: ecology
 # --------------------------------------------------------------------------- #
 with tab5:
     eco = run["ecology"]
     ab = eco["abundance"]
-    st.markdown("#### Abundance — reported as bounds (plan §10.1)")
+    st.markdown("#### Abundance, reported as bounds (plan §10.1)")
     c = st.columns(3)
     c[0].metric("MaxN (conservative lower bound)", ab["maxn_total"],
                 help=f"max fish in any single frame; at t={ab['maxn_timestamp']}s")
@@ -462,7 +486,7 @@ with tab5:
 
 
 # --------------------------------------------------------------------------- #
-# tabs 6 / 7 — Phase 2 placeholders
+# tabs 6 / 7: Phase 2 placeholders
 # --------------------------------------------------------------------------- #
 with tab6:
     st.info("**Benchmark (Phase 2).** 2×2 ablation ByteTrack vs BoT-SORT+ReID × raw vs restored, "

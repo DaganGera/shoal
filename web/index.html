@@ -1,288 +1,36 @@
 <!doctype html>
 <!--
-  SHOAL demo page.
+  SHOAL landing page.
 
-  Design read: research-tool product page for a hackathon jury of oceanographers
-  and data analysts. Deep-water scientific-instrument language. Committed dark
-  theme (a monitoring console is a single-look product). Single accent, amber,
-  lifted straight from the tool's own tracker overlay.
-  Dials: DESIGN_VARIANCE 5 / MOTION_INTENSITY 5 / VISUAL_DENSITY 5.
-  Stack: hand-written modern CSS, self-hosted Geist + Geist Mono, vendored
-  Phosphor icon paths, IntersectionObserver reveals. No build step (npm is not
-  available in this environment; a static page is also the right call for a demo
-  that opens as a URL on a projector).
-  Every number on this page is generated from outputs/<run>/ via web/build_assets.py.
+  Design read: research-instrument product landing for a hackathon jury of
+  marine scientists and data engineers. Linear-style dark-technical language.
+  Committed dark theme (a monitoring instrument is a single-look product).
+  One accent: amber, lifted from the tool's own BoT-SORT track overlay.
+  Dials: DESIGN_VARIANCE 6 / MOTION_INTENSITY 4 / VISUAL_DENSITY 4.
+
+  Foundation: Tailwind v4 + DaisyUI v5 component primitives under one locked
+  custom theme ("shoal"). Built by web/build.sh with a pinned standalone
+  Tailwind CLI + the DaisyUI tarball (no npm). styles.css is committed.
+
+  Redesign mode: overhaul on preserved content and IA. Anchor IDs (#pipeline,
+  #outputs, #rigor) and copy voice kept. Every number is generated from
+  outputs/<run>/ by web/build_assets.py.
 -->
-<html lang="en">
+<html lang="en" data-theme="shoal" class="scroll-smooth">
 <head>
 <script>document.documentElement.classList.add("js")</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SHOAL / underwater video to marine-science metrics</title>
-<meta name="description" content="SHOAL turns underwater video into fish trajectories, then into MaxN abundance, diversity with confidence intervals, and behavioural state. Every figure is measured.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Crect width='256' height='256' rx='36' fill='%230b0e13'/%3E%3Cpath fill='%23ffb24a' d='M168 76a12 12 0 1 1-12-12 12 12 0 0 1 12 12Zm48.72 67.64c-19.37 34.9-55.44 53.76-107.24 56.1l-22 51.41A8 8 0 0 1 80.1 256l-.51 0a8 8 0 0 1-7.19-5.78L57.6 198.39 5.8 183.56a8 8 0 0 1-1-15.05l51.41-22c2.35-51.78 21.21-87.84 56.09-107.22 24.75-13.74 52.74-15.84 71.88-15.18 18.64.64 36 4.27 38.86 6a8 8 0 0 1 2.83 2.83c1.69 2.85 5.33 20.21 6 38.85C232.55 90.89 230.46 118.89 216.72 143.64Z'/%3E%3C/svg%3E">
-
-<style>
-  @font-face { font-family:"Geist"; src:url("assets/fonts/Geist-Regular.woff2") format("woff2"); font-weight:400; font-display:swap }
-  @font-face { font-family:"Geist"; src:url("assets/fonts/Geist-Medium.woff2") format("woff2"); font-weight:500; font-display:swap }
-  @font-face { font-family:"Geist"; src:url("assets/fonts/Geist-SemiBold.woff2") format("woff2"); font-weight:600; font-display:swap }
-  @font-face { font-family:"Geist Mono"; src:url("assets/fonts/GeistMono-Regular.woff2") format("woff2"); font-weight:400; font-display:swap }
-  @font-face { font-family:"Geist Mono"; src:url("assets/fonts/GeistMono-Medium.woff2") format("woff2"); font-weight:500; font-display:swap }
-
-  :root {
-    --ink:      #0b0e13;
-    --ink-2:    #10151d;
-    --ink-3:    #161d28;
-    --line:     rgba(233,237,242,.09);
-    --line-2:   rgba(233,237,242,.16);
-    --text:     #e9edf2;
-    --text-2:   #99a3b1;
-    --text-3:   #67707d;
-    --amber:    #ffb24a;
-    --amber-2:  #ffc987;
-    --amber-dim:rgba(255,178,74,.13);
-    --r:        5px;
-    --wrap:     1200px;
-    --sans: "Geist", ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
-    --mono: "Geist Mono", ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
-    --ease: cubic-bezier(.16,1,.3,1);
-    color-scheme: dark;
-  }
-
-  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0 }
-  html { scroll-behavior:smooth; -webkit-text-size-adjust:100% }
-  body {
-    background:var(--ink); color:var(--text);
-    font-family:var(--sans); font-weight:400; font-size:16px; line-height:1.6;
-    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
-    overflow-x:hidden;
-  }
-  a { color:inherit; text-decoration:none }
-  img, video { display:block; max-width:100% }
-  svg { display:block }
-  ::selection { background:var(--amber); color:#1a1206 }
-
-  .wrap { max-width:var(--wrap); margin:0 auto; padding:0 24px }
-  .ico { width:1em; height:1em; fill:currentColor; flex:none }
-
-  h1, h2, h3 { font-weight:600; letter-spacing:-.021em; line-height:1.08; color:var(--text) }
-  h1 { font-size:clamp(1.9rem, 1rem + 2.7vw, 2.7rem) }
-  h2 { font-size:clamp(1.65rem, 1rem + 2.4vw, 2.5rem); letter-spacing:-.018em }
-  h3 { font-size:1.06rem; font-weight:500; letter-spacing:-.01em }
-  p  { color:var(--text-2); max-width:62ch }
-  .lead { font-size:clamp(1.05rem, .95rem + .5vw, 1.22rem); color:var(--text-2) }
-  .eyebrow {
-    font-family:var(--mono); font-size:.72rem; font-weight:500;
-    letter-spacing:.16em; text-transform:uppercase; color:var(--amber);
-  }
-  .mono { font-family:var(--mono); font-variant-numeric:tabular-nums }
-  .n { font-family:var(--mono); font-weight:500; color:var(--text) }
-
-  section { padding:clamp(72px, 9vw, 128px) 0; border-top:1px solid var(--line) }
-
-  /* ---------- nav ---------- */
-  header {
-    position:sticky; top:0; z-index:50;
-    background:color-mix(in srgb, var(--ink) 82%, transparent);
-    backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
-    border-bottom:1px solid var(--line);
-  }
-  .nav { display:flex; align-items:center; justify-content:space-between; height:60px }
-  .brand { display:flex; align-items:center; gap:9px; font-weight:600; letter-spacing:.02em }
-  .brand .ico { color:var(--amber); font-size:19px }
-  .nav-links { display:flex; align-items:center; gap:30px; font-size:.9rem }
-  .nav-links a.txt { color:var(--text-2); transition:color .2s var(--ease) }
-  .nav-links a.txt:hover { color:var(--text) }
-  .btn {
-    display:inline-flex; align-items:center; gap:8px; white-space:nowrap;
-    font-family:var(--sans); font-weight:500; font-size:.9rem;
-    padding:9px 15px; border-radius:var(--r); border:1px solid var(--line-2);
-    color:var(--text); background:transparent;
-    transition:transform .12s var(--ease), border-color .2s var(--ease), background .2s var(--ease);
-  }
-  .btn .ico { font-size:15px }
-  .btn:hover { border-color:var(--amber); background:var(--amber-dim) }
-  .btn:active { transform:translateY(1px) }
-  .btn-primary {
-    background:var(--amber); color:#1a1206; border-color:var(--amber); font-weight:600;
-  }
-  .btn-primary:hover { background:var(--amber-2); border-color:var(--amber-2) }
-
-  /* ---------- hero ---------- */
-  .hero { padding-top:clamp(56px, 8vw, 92px); border-top:0 }
-  .hero-grid {
-    display:grid; grid-template-columns:1.02fr 1.15fr; gap:clamp(32px, 5vw, 68px);
-    align-items:center;
-  }
-  .hero h1 { max-width:22ch; text-wrap:balance }
-  .hero .lead { margin-top:24px; max-width:46ch }
-  .hero .cta-row { margin-top:34px; display:flex; gap:12px; flex-wrap:wrap }
-  .hero-media { position:relative }
-  .hero-media video {
-    width:100%; border-radius:var(--r); border:1px solid var(--line-2);
-    background:var(--ink-2);
-  }
-  .hero-media figcaption {
-    margin-top:12px; font-size:.82rem; color:var(--text-3); font-family:var(--mono);
-  }
-
-  /* ---------- thesis ---------- */
-  .thesis p { max-width:30ch; color:var(--text); font-size:clamp(1.5rem, 1rem + 2.4vw, 2.35rem);
-    font-weight:500; letter-spacing:-.016em; line-height:1.22 }
-  .thesis .sub { margin-top:26px; max-width:56ch; font-size:1.06rem; color:var(--text-2); font-weight:400 }
-
-  /* ---------- pipeline strip ---------- */
-  .pipe-head { max-width:660px; margin-bottom:40px }
-  .pipe-head h2 { margin-bottom:16px; max-width:27ch }
-  .pipe-head p { max-width:54ch }
-  .pipe {
-    display:grid; grid-template-columns:repeat(5, 1fr);
-    border-top:1px solid var(--line-2); border-left:1px solid var(--line);
-  }
-  .step {
-    padding:22px 22px 24px; border-right:1px solid var(--line); border-bottom:1px solid var(--line);
-    min-height:158px;
-  }
-  .step .k {
-    font-family:var(--mono); font-size:.74rem; color:var(--text-3); letter-spacing:.04em;
-  }
-  .step .k::before { content:""; display:block; width:18px; height:2px; background:var(--amber); margin-bottom:16px }
-  .step h3 { margin:9px 0 8px; color:var(--text) }
-  .step p { font-size:.88rem; color:var(--text-2) }
-
-  /* ---------- after the boxes: sticky + scroll ---------- */
-  .after-grid { display:grid; grid-template-columns:0.82fr 1.18fr; gap:clamp(28px, 5vw, 64px) }
-  .after-left { position:sticky; top:96px; align-self:start; padding-bottom:20px }
-  .after-left h2 { margin:16px 0 18px; max-width:16ch }
-  .after-left p { font-size:.98rem }
-  .bounds { margin-top:28px; border-top:1px solid var(--line); padding-top:22px }
-  .bounds .row { display:grid; grid-template-columns:64px 1fr auto; align-items:center; gap:14px; margin-top:12px }
-  .bounds .row:first-of-type { margin-top:0 }
-  .bounds .lbl { font-family:var(--mono); font-size:.78rem; color:var(--text-2) }
-  .bounds .track { height:8px; background:var(--ink-3); border-radius:2px; overflow:hidden }
-  .bounds .fill { height:100%; transform-origin:left; transform:scaleX(var(--v)) }
-  html.js .bounds .fill { transform:scaleX(0); transition:transform 1s var(--ease) }
-  html.js .bounds.in .fill { transform:scaleX(var(--v)) }
-  .bounds .fill.maxn { background:var(--amber) }
-  .bounds .fill.trk { background:var(--line-2) }
-  .bounds .v { font-family:var(--mono); font-weight:500; color:var(--text); font-size:.9rem; min-width:2.2ch; text-align:right }
-  .bounds .cap { margin-top:16px; font-size:.82rem; color:var(--text-3); max-width:40ch }
-
-  .figures { display:grid; gap:clamp(40px, 6vw, 72px) }
-  .figure > figcaption { margin-top:14px }
-  .figure img { width:100%; border-radius:var(--r); border:1px solid var(--line-2); background:var(--ink-2) }
-  .figure h3 { margin-bottom:7px }
-  .figure p { font-size:.92rem }
-  .ab-pair { display:grid; grid-template-columns:1fr 1fr; gap:12px }
-  .ab-pair figcaption {
-    margin-top:8px; font-family:var(--mono); font-size:.7rem; letter-spacing:.1em;
-    color:var(--text-3);
-  }
-
-  /* ---------- rigor list ---------- */
-  .rigor h2 { max-width:26ch; margin-bottom:40px }
-  .rlist { border-top:1px solid var(--line-2) }
-  .ritem {
-    display:grid; grid-template-columns:16px 1fr; gap:18px;
-    padding:22px 0; border-bottom:1px solid var(--line);
-  }
-  .ritem .ico { color:var(--amber); font-size:16px; margin-top:3px }
-  .ritem h3 { margin-bottom:5px }
-  .ritem p { font-size:.93rem; max-width:70ch }
-  .envstrip {
-    margin-top:30px; font-family:var(--mono); font-size:.78rem; color:var(--text-3);
-    display:flex; flex-wrap:wrap; gap:8px 18px;
-  }
-  .envstrip b { color:var(--text-2); font-weight:400 }
-
-  /* ---------- outputs: chart + table ---------- */
-  .out-head { max-width:52ch; margin-bottom:36px }
-  .out-head h2 { margin-bottom:14px; max-width:16ch }
-  .out-head p { max-width:46ch }
-  .vischart { border:1px solid var(--line); border-radius:var(--r); overflow:hidden; background:var(--ink-2); margin-bottom:14px }
-  .vischart img { width:100% }
-  .visnote { font-size:.86rem; color:var(--text-3); margin-bottom:40px; max-width:60ch }
-  table.clips { width:100%; border-collapse:collapse; font-size:.9rem }
-  table.clips th, table.clips td { text-align:right; padding:14px 12px; border-bottom:1px solid var(--line) }
-  table.clips th:first-child, table.clips td:first-child { text-align:left }
-  table.clips thead th {
-    font-family:var(--mono); font-weight:400; font-size:.74rem; letter-spacing:.06em;
-    text-transform:uppercase; color:var(--text-3); border-bottom-color:var(--line-2);
-  }
-  table.clips td { color:var(--text-2) }
-  table.clips td.num { font-family:var(--mono); color:var(--text); font-variant-numeric:tabular-nums }
-  table.clips td.name { color:var(--text); font-weight:500 }
-  .tablenote { margin-top:18px; font-size:.84rem; color:var(--text-3); max-width:64ch }
-
-  /* ---------- downstream grid ---------- */
-  .down-head { max-width:40ch; margin-bottom:44px }
-  .down {
-    display:grid; grid-template-columns:repeat(6, 1fr);
-    grid-auto-rows:1fr; gap:1px; background:var(--line); border:1px solid var(--line);
-    border-radius:var(--r); overflow:hidden;
-  }
-  .cell { background:var(--ink); padding:26px 24px; display:flex; flex-direction:column; gap:9px }
-  .cell.s3 { grid-column:span 3 } .cell.s2 { grid-column:span 2 } .cell.s4 { grid-column:span 4 }
-  .cell .k { font-family:var(--mono); font-size:.74rem; color:var(--amber); letter-spacing:.05em }
-  .cell h3 { color:var(--text) }
-  .cell p { font-size:.9rem; max-width:42ch }
-  .cell.media { padding:0; position:relative; min-height:180px }
-  .cell.media img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:.9 }
-  .cell.media .tag {
-    position:relative; margin-top:auto; padding:16px 20px; font-family:var(--mono); font-size:.78rem;
-    color:var(--text); background:linear-gradient(to top, var(--ink), transparent); width:100%;
-  }
-
-  /* ---------- close ---------- */
-  .close { text-align:left }
-  .close h2 { max-width:24ch }
-  .close .three { display:grid; gap:20px; margin:34px 0 8px; max-width:60ch }
-  .close .three p { color:var(--text); font-size:1.04rem }
-  .close .three p span { color:var(--text-3) }
-  .close .cta-row { margin-top:32px; display:flex; gap:12px; flex-wrap:wrap; align-items:center }
-  .roadmap { margin-top:40px; padding-top:24px; border-top:1px solid var(--line) }
-  .roadmap .k { font-family:var(--mono); font-size:.74rem; letter-spacing:.1em; text-transform:uppercase; color:var(--text-3) }
-  .roadmap ul { list-style:none; margin-top:14px; display:grid; grid-template-columns:repeat(2,1fr); gap:10px 28px; max-width:640px }
-  .roadmap li { font-size:.92rem; color:var(--text-2); padding-left:16px; position:relative }
-  .roadmap li::before { content:"+"; position:absolute; left:0; color:var(--amber); font-family:var(--mono) }
-
-  /* ---------- footer ---------- */
-  footer { border-top:1px solid var(--line); padding:40px 0 56px }
-  .foot { display:flex; flex-wrap:wrap; gap:16px 40px; align-items:baseline; font-size:.85rem; color:var(--text-3) }
-  .foot .brand { color:var(--text-2); font-size:.9rem }
-  .foot a:hover { color:var(--text) }
-  .foot .mono { font-family:var(--mono) }
-
-  /* ---------- reveal motion (progressive: hidden only when JS is present) ---------- */
-  @media (prefers-reduced-motion: no-preference) {
-    html.js .reveal { opacity:0; transform:translateY(18px); transition:opacity .7s var(--ease), transform .7s var(--ease); transition-delay:calc(var(--i, 0) * 55ms) }
-    html.js .reveal.in { opacity:1; transform:none }
-  }
-
-  /* ---------- responsive ---------- */
-  @media (max-width: 1000px) {
-    .pipe { grid-template-columns:repeat(3, 1fr) }
-  }
-  @media (max-width: 900px) {
-    .hero-grid, .after-grid { grid-template-columns:1fr }
-    .after-left { position:static }
-    .down { grid-template-columns:1fr }
-    .cell.s3, .cell.s2, .cell.s4 { grid-column:span 1 }
-    .roadmap ul { grid-template-columns:1fr }
-  }
-  @media (max-width: 620px) {
-    .pipe { grid-template-columns:repeat(2, 1fr) }
-    .nav-links a.txt { display:none }
-    .wrap { padding:0 18px }
-    .ab-pair { grid-template-columns:1fr }
-    table.clips { font-size:.82rem }
-    table.clips th, table.clips td { padding:11px 7px }
-  }
-</style>
+<meta name="description" content="SHOAL turns underwater video into fish trajectories, then into MaxN abundance, diversity with confidence intervals, and behavioural state. Every figure is measured, not asserted.">
+<link rel="preload" as="font" type="font/woff2" href="assets/fonts/Geist-Regular.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="assets/fonts/Geist-SemiBold.woff2" crossorigin>
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Crect width='256' height='256' rx='40' fill='%230b0f14'/%3E%3Cpath fill='%23ffb24a' d='M168 76a12 12 0 1 1-12-12 12 12 0 0 1 12 12Zm48.72 67.64c-19.37 34.9-55.44 53.76-107.24 56.1l-22 51.41A8 8 0 0 1 80.1 256l-.51 0a8 8 0 0 1-7.19-5.78L57.6 198.39 5.8 183.56a8 8 0 0 1-1-15.05l51.41-22c2.35-51.78 21.21-87.84 56.09-107.22 24.75-13.74 52.74-15.84 71.88-15.18 18.64.64 36 4.27 38.86 6a8 8 0 0 1 2.83 2.83c1.69 2.85 5.33 20.21 6 38.85C232.55 90.89 230.46 118.89 216.72 143.64Z'/%3E%3C/svg%3E">
 </head>
-<body>
+<body class="bg-base-100 text-base-content font-sans antialiased">
 
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<svg width="0" height="0" class="absolute" aria-hidden="true"><defs>
   <symbol id="i-fish" viewBox="0 0 256 256"><path d="M168,76a12,12,0,1,1-12-12A12,12,0,0,1,168,76Zm48.72,67.64c-19.37,34.9-55.44,53.76-107.24,56.1l-22,51.41A8,8,0,0,1,80.1,256l-.51,0a8,8,0,0,1-7.19-5.78L57.6,198.39,5.8,183.56a8,8,0,0,1-1-15.05l51.41-22c2.35-51.78,21.21-87.84,56.09-107.22,24.75-13.74,52.74-15.84,71.88-15.18,18.64.64,36,4.27,38.86,6a8,8,0,0,1,2.83,2.83c1.69,2.85,5.33,20.21,6,38.85C232.55,90.89,230.46,118.89,216.72,143.64Zm-55.18,29a52.11,52.11,0,0,1-33.4-44.78A52.09,52.09,0,0,1,83.37,94.47q-10.45,23.79-11.3,57.59a8,8,0,0,1-4.85,7.17L31.83,174.37l34.45,9.86a8,8,0,0,1,5.49,5.5l9.84,34.44,15.16-35.4a8,8,0,0,1,7.17-4.84Q137.71,183.12,161.54,172.64ZM212.42,43.57c-14.15-3-64.1-11-100.3,14.75a81.21,81.21,0,0,0-16,15.07,36,36,0,0,0,39.35,38.44,8,8,0,0,1,8.73,8.73,36,36,0,0,0,38.47,39.34,80.81,80.81,0,0,0,15-16C223.42,107.73,215.42,57.74,212.42,43.57Z"/></symbol>
   <symbol id="i-arrow" viewBox="0 0 256 256"><path d="M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z"/></symbol>
   <symbol id="i-gh" viewBox="0 0 256 256"><path d="M208.31,75.68A59.78,59.78,0,0,0,202.93,28,8,8,0,0,0,196,24a59.75,59.75,0,0,0-48,24H124A59.75,59.75,0,0,0,76,24a8,8,0,0,0-6.93,4,59.78,59.78,0,0,0-5.38,47.68A58.14,58.14,0,0,0,56,104v8a56.06,56.06,0,0,0,48.44,55.47A39.8,39.8,0,0,0,96,192v8H72a24,24,0,0,1-24-24A40,40,0,0,0,8,136a8,8,0,0,0,0,16,24,24,0,0,1,24,24,40,40,0,0,0,40,40H96v16a8,8,0,0,0,16,0V192a24,24,0,0,1,48,0v40a8,8,0,0,0,16,0V192a39.8,39.8,0,0,0-8.44-24.53A56.06,56.06,0,0,0,216,112v-8A58.14,58.14,0,0,0,208.31,75.68ZM200,112a40,40,0,0,1-40,40H112a40,40,0,0,1-40-40v-8a41.74,41.74,0,0,1,6.9-22.48A8,8,0,0,0,80,73.83a43.81,43.81,0,0,1,.79-33.58,43.88,43.88,0,0,1,32.32,20.06A8,8,0,0,0,119.82,64h32.35a8,8,0,0,0,6.74-3.69,43.87,43.87,0,0,1,32.32-20.06A43.81,43.81,0,0,1,192,73.83a8.09,8.09,0,0,0,1,7.65A41.72,41.72,0,0,1,200,104Z"/></symbol>
@@ -293,18 +41,24 @@
   <symbol id="i-shield" viewBox="0 0 256 256"><path d="M208,40H48A16,16,0,0,0,32,56v56c0,52.72,25.52,84.67,46.93,102.19,23.06,18.86,46,25.26,47,25.53a8,8,0,0,0,4.2,0c1-.27,23.91-6.67,47-25.53C198.48,196.67,224,164.72,224,112V56A16,16,0,0,0,208,40Zm0,72c0,37.07-13.66,67.16-40.6,89.42A129.3,129.3,0,0,1,128,223.62a128.25,128.25,0,0,1-38.92-21.81C61.82,179.51,48,149.3,48,112l0-56,160,0ZM82.34,141.66a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32l-56,56a8,8,0,0,1-11.32,0Z"/></symbol>
   <symbol id="i-flow" viewBox="0 0 256 256"><path d="M245.66,74.34l-32-32a8,8,0,0,0-11.32,11.32L220.69,72H208c-49.33,0-61.05,28.12-71.38,52.92-9.38,22.51-16.92,40.59-49.48,42.84a40,40,0,1,0,.1,16c43.26-2.65,54.34-29.15,64.14-52.69C161.41,107,169.33,88,208,88h12.69l-18.35,18.34a8,8,0,0,0,11.32,11.32l32-32A8,8,0,0,0,245.66,74.34ZM48,200a24,24,0,1,1,24-24A24,24,0,0,1,48,200Z"/></symbol>
   <symbol id="i-map" viewBox="0 0 256 256"><path d="M228.92,49.69a8,8,0,0,0-6.86-1.45L160.93,63.52,99.58,32.84a8,8,0,0,0-5.52-.6l-64,16A8,8,0,0,0,24,56V200a8,8,0,0,0,9.94,7.76l61.13-15.28,61.35,30.68A8.15,8.15,0,0,0,160,224a8,8,0,0,0,1.94-.24l64-16A8,8,0,0,0,232,200V56A8,8,0,0,0,228.92,49.69ZM104,52.94l48,24V203.06l-48-24ZM40,62.25l48-12v127.5l-48,12Zm176,131.5-48,12V78.25l48-12Z"/></symbol>
-  <symbol id="i-binoc" viewBox="0 0 256 256"><path d="M237.2,151.87v0a47.1,47.1,0,0,0-2.35-5.45L193.26,51.8a7.82,7.82,0,0,0-1.66-2.44,32,32,0,0,0-45.26,0A8,8,0,0,0,144,55V80H112V55a8,8,0,0,0-2.34-5.66,32,32,0,0,0-45.26,0,7.82,7.82,0,0,0-1.66,2.44L21.15,146.4a47.1,47.1,0,0,0-2.35,5.45v0A48,48,0,1,0,112,168V96h32v72a48,48,0,1,0,93.2-16.13ZM64,200a32,32,0,1,1,32-32A32,32,0,0,1,64,200Zm128,0a32,32,0,1,1,32-32A32,32,0,0,1,192,200Z"/></symbol>
+  <symbol id="i-repeat" viewBox="0 0 256 256"><path d="M24,128A72.08,72.08,0,0,1,96,56H204.69L194.34,45.66a8,8,0,0,1,11.32-11.32l24,24a8,8,0,0,1,0,11.32l-24,24a8,8,0,0,1-11.32-11.32L204.69,72H96a56.06,56.06,0,0,0-56,56,8,8,0,0,1-16,0Zm200-8a8,8,0,0,0-8,8,56.06,56.06,0,0,1-56,56H51.31l10.35-10.34a8,8,0,0,0-11.32-11.32l-24,24a8,8,0,0,0,0,11.32l24,24a8,8,0,0,0,11.32-11.32L51.31,200H160a72.08,72.08,0,0,0,72-72A8,8,0,0,0,224,120Z"/></symbol>
 </defs></svg>
 
-<header>
-  <div class="wrap nav">
-    <a class="brand" href="#top"><svg class="ico"><use href="#i-fish"/></svg> SHOAL</a>
-    <nav class="nav-links">
-      <a class="txt" href="#pipeline">Pipeline</a>
-      <a class="txt" href="#outputs">Outputs</a>
-      <a class="txt" href="#rigor">Rigor</a>
-      <a class="btn" href="https://github.com/DaganGera/shoal">
-        <svg class="ico"><use href="#i-gh"/></svg> View on GitHub
+
+<!-- ===================== nav ===================== -->
+<header class="sticky top-0 z-50 border-b border-base-content/10 bg-base-100/80 backdrop-blur-md">
+  <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-6">
+    <a href="#top" class="flex items-center gap-2.5 font-semibold tracking-tight">
+      <svg class="size-5 fill-primary"><use href="#i-fish"/></svg>
+      SHOAL
+    </a>
+    <nav class="flex items-center gap-1 sm:gap-2">
+      <a href="#pipeline" class="hidden rounded-field px-3 py-2 text-sm text-base-content/70 transition-colors hover:text-base-content md:inline-block">Pipeline</a>
+      <a href="#outputs" class="hidden rounded-field px-3 py-2 text-sm text-base-content/70 transition-colors hover:text-base-content md:inline-block">Outputs</a>
+      <a href="#rigor" class="hidden rounded-field px-3 py-2 text-sm text-base-content/70 transition-colors hover:text-base-content md:inline-block">Rigor</a>
+      <a href="https://github.com/DaganGera/shoal" class="btn btn-primary btn-sm ml-1 gap-2">
+        <svg class="size-4 fill-current"><use href="#i-gh"/></svg>
+        View on GitHub
       </a>
     </nav>
   </div>
@@ -312,232 +66,452 @@
 
 <main id="top">
 
-  <section class="hero">
-    <div class="wrap">
-      <div class="hero-grid">
-        <div class="reveal">
-          <h1>From underwater video to marine science.</h1>
-          <p class="lead">SHOAL tracks fish through changing visibility, then turns the trajectories
-            into abundance, diversity and behaviour. Every figure is measured.</p>
-          <div class="cta-row">
-            <a class="btn btn-primary" href="https://github.com/DaganGera/shoal">
-              <svg class="ico"><use href="#i-gh"/></svg> View on GitHub
-            </a>
-            <a class="btn" href="#pipeline">See the pipeline <svg class="ico"><use href="#i-arrow"/></svg></a>
+  <!-- ===================== hero ===================== -->
+  <section class="mx-auto max-w-6xl px-5 pt-14 pb-16 sm:px-6 sm:pt-20 lg:pt-20 lg:pb-24">
+    <div class="grid items-center gap-12 lg:grid-cols-[1.35fr_1fr] lg:gap-14">
+      <div class="reveal">
+        <h1 class="text-4xl font-semibold leading-[1.07] tracking-tight text-balance sm:text-5xl lg:text-[2.9rem] xl:text-5xl 2xl:text-[3.4rem]">
+          From underwater video to marine science.
+        </h1>
+        <p class="mt-6 max-w-[46ch] text-lg leading-relaxed text-base-content/70">
+          SHOAL tracks fish through changing visibility, then turns the trajectories
+          into abundance, diversity and behaviour. Every figure is measured.
+        </p>
+        <div class="mt-8 flex flex-wrap gap-3">
+          <a href="https://github.com/DaganGera/shoal" class="btn btn-primary gap-2">
+            <svg class="size-4 fill-current"><use href="#i-gh"/></svg>
+            View on GitHub
+          </a>
+          <a href="#pipeline" class="btn btn-ghost gap-2">
+            See the pipeline
+            <svg class="size-4 fill-current"><use href="#i-arrow"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <figure class="reveal" style="--i:1">
+        <div class="hero-wash rounded-box p-2 sm:p-3">
+          <div class="media-frame ring-1 ring-white/5">
+            <video class="block aspect-video w-full object-cover" src="assets/tracking.mp4"
+                   poster="assets/tracking_poster.jpg"
+                   autoplay muted loop playsinline preload="metadata"></video>
           </div>
         </div>
-        <figure class="hero-media reveal" style="--i:1">
-          <video src="assets/tracking.mp4" autoplay muted loop playsinline preload="metadata"></video>
-          <figcaption>Detection and tracking, marine-detect FishInv plus BoT-SORT, on a reef sequence.</figcaption>
+        <figcaption class="mt-3 font-mono text-xs text-base-content/55">
+          Detection and BoT-SORT tracking on a reef sequence. Fish are collapsed to one class before the tracker.
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ===================== fact band ===================== -->
+  <section class="border-y border-base-content/10 bg-base-200">
+    <div class="mx-auto max-w-6xl px-5 sm:px-6">
+      <dl class="grid grid-cols-2 divide-base-content/10 lg:grid-cols-4 lg:divide-x">
+        <div class="reveal px-1 py-7 lg:px-6">
+          <dt class="font-mono text-3xl font-medium tnum">10</dt>
+          <dd class="mt-1.5 text-sm text-base-content/65">pipeline stages, one dataframe contract between each</dd>
+        </div>
+        <div class="reveal px-1 py-7 lg:px-6" style="--i:1">
+          <dt class="font-mono text-3xl font-medium tnum">75</dt>
+          <dd class="mt-1.5 text-sm text-base-content/65">repaired trajectories from one 13-second reef clip</dd>
+        </div>
+        <div class="reveal px-1 py-7 lg:px-6" style="--i:2">
+          <dt class="font-mono text-3xl font-medium tnum">3</dt>
+          <dd class="mt-1.5 text-sm text-base-content/65">export formats: CSV, GeoJSON, MOTChallenge</dd>
+        </div>
+        <div class="reveal px-1 py-7 lg:px-6" style="--i:3">
+          <dt class="font-mono text-3xl font-medium tnum">29</dt>
+          <dd class="mt-1.5 text-sm text-base-content/65">tests, green on continuous integration</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ===================== thesis ===================== -->
+  <section class="mx-auto max-w-3xl px-5 py-20 text-center sm:px-6 lg:py-24">
+    <p class="reveal mx-auto max-w-[24ch] text-2xl font-medium leading-tight tracking-tight sm:text-4xl">
+      Most underwater-CV demos stop at boxes on fish.
+    </p>
+    <p class="reveal mx-auto mt-6 max-w-[54ch] text-base leading-relaxed text-base-content/65" style="--i:1">
+      The scarce, expensive part is everything after: turning boxes into repaired trajectories,
+      and trajectories into quantities an oceanographer or a data analyst can act on.
+      SHOAL spends its effort there.
+    </p>
+  </section>
+
+  <!-- ===================== pipeline ===================== -->
+  <section id="pipeline" class="border-t border-base-content/10 bg-base-200">
+    <div class="mx-auto max-w-6xl px-5 py-16 sm:px-6 lg:py-24">
+      <div class="reveal max-w-[60ch]">
+        <h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">
+          Ten stages. Detection and identification kept apart on purpose.
+        </h2>
+        <p class="mt-4 text-base leading-relaxed text-base-content/65">
+          The detector runs single class and high recall, so the tracker has one stable job.
+          Species identification is a separate track-level step, far more reliable over a hundred
+          views of one animal than frame by frame.
+        </p>
+      </div>
+
+      <div class="reveal mt-12 grid gap-px overflow-hidden rounded-box border border-base-content/12 bg-base-content/12 md:grid-cols-3">
+        <div class="flex flex-col bg-base-100 p-6 sm:p-7">
+          <h3 class="text-sm font-semibold tracking-tight text-primary">Acquire and condition</h3>
+          <dl class="rule-list mt-4">
+            <div class="py-3.5"><dt class="font-medium">Ingest</dt><dd class="mt-1 text-sm text-base-content/60">Real timestamps, plus a measured camera-motion guard.</dd></div>
+            <div class="py-3.5"><dt class="font-medium">Visibility index</dt><dd class="mt-1 text-sm text-base-content/60">Per-frame turbidity score, calibrated against anchor clips.</dd></div>
+            <div class="py-3.5"><dt class="font-medium">Restoration</dt><dd class="mt-1 text-sm text-base-content/60">Adaptive enhancement that fires only below the gate.</dd></div>
+          </dl>
+          <p class="mt-auto pt-6 font-mono text-xs text-base-content/45">out: visibility-scored frames</p>
+        </div>
+        <div class="flex flex-col bg-base-100 p-6 sm:p-7">
+          <h3 class="text-sm font-semibold tracking-tight text-primary">Detect and track</h3>
+          <dl class="rule-list mt-4">
+            <div class="py-3.5"><dt class="font-medium">Detection</dt><dd class="mt-1 text-sm text-base-content/60">Single class, high recall, a three-rung fallback chain.</dd></div>
+            <div class="py-3.5"><dt class="font-medium">Tracking</dt><dd class="mt-1 text-sm text-base-content/60">BoT-SORT with Re-ID, tuned for shoaling motion.</dd></div>
+            <div class="py-3.5"><dt class="font-medium">Repair</dt><dd class="mt-1 text-sm text-base-content/60">Smoothing, bounded gap-fill, conservative stitching, quality flags.</dd></div>
+          </dl>
+          <p class="mt-auto pt-6 font-mono text-xs text-base-content/45">out: tracks_df, track_summary_df</p>
+        </div>
+        <div class="flex flex-col bg-base-100 p-6 sm:p-7">
+          <h3 class="text-sm font-semibold tracking-tight text-primary">Analyse and export</h3>
+          <dl class="rule-list mt-4">
+            <div class="py-3.5"><dt class="font-medium">Trajectory analytics</dt><dd class="mt-1 text-sm text-base-content/60">MovingPandas: residency, stops, activity nodes, flows.</dd></div>
+            <div class="py-3.5"><dt class="font-medium">Behaviour</dt><dd class="mt-1 text-sm text-base-content/60">State segmentation from the clip's own kinematic percentiles.</dd></div>
+            <div class="py-3.5"><dt class="font-medium">Ecology</dt><dd class="mt-1 text-sm text-base-content/60">MaxN, diversity with intervals, and the honesty guard.</dd></div>
+            <div class="py-3.5"><dt class="font-medium">Export</dt><dd class="mt-1 text-sm text-base-content/60">CSV, GeoJSON, and MOTChallenge for independent scoring.</dd></div>
+          </dl>
+          <p class="mt-auto pt-6 font-mono text-xs text-base-content/45">out: tracks.csv, trajectories.geojson, results_MOT.txt</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== analytics layer ===================== -->
+  <section class="border-t border-base-content/10">
+    <div class="mx-auto grid max-w-6xl gap-12 px-5 py-16 sm:px-6 lg:grid-cols-[0.82fr_1.18fr] lg:gap-16 lg:py-24">
+      <div class="reveal lg:sticky lg:top-24 lg:self-start">
+        <p class="eyebrow">What SHOAL produces</p>
+        <h2 class="mt-4 max-w-[18ch] text-3xl font-semibold tracking-tight sm:text-4xl">
+          The analytics layer is the contribution.
+        </h2>
+        <p class="mt-4 text-base leading-relaxed text-base-content/65">
+          One 13-second reef clip yields 75 repaired trajectories, each carrying speed, sinuosity
+          and quality flags. From there the pipeline computes what a survey actually reports.
+        </p>
+        <div class="mt-8 flex gap-10 border-t border-base-content/10 pt-6">
+          <div>
+            <div class="font-mono text-3xl font-medium tnum text-primary">20</div>
+            <div class="mt-1 text-xs uppercase tracking-wide text-base-content/45">MaxN</div>
+          </div>
+          <div>
+            <div class="font-mono text-3xl font-medium tnum">67</div>
+            <div class="mt-1 text-xs uppercase tracking-wide text-base-content/45">unique tracks</div>
+          </div>
+        </div>
+        <p class="mt-4 max-w-[42ch] text-sm text-base-content/55">
+          MaxN is the conservative lower bound. The unique-track count is the upper bound,
+          sensitive to ID fragmentation. Both are shown, both labelled.
+        </p>
+      </div>
+
+      <div class="grid gap-12">
+        <figure class="reveal">
+          <div class="media-frame"><img class="w-full" src="assets/residency.png" alt="Residency heatmap: two bright occupancy hotspots over a dark anemone scene"></div>
+          <figcaption class="mt-3">
+            <h3 class="font-semibold tracking-tight">Residency</h3>
+            <p class="mt-1 max-w-[60ch] text-sm leading-relaxed text-base-content/60">
+              Time-weighted occupancy over the frame, from the <span class="font-mono text-base-content/75">anemone_static</span>
+              sequence. Two clownfish, two clear hotspots. Legible in one glance.
+            </p>
+          </figcaption>
+        </figure>
+
+        <figure class="reveal">
+          <div class="media-frame"><img class="w-full" src="assets/trajectories.png" alt="Seventy-five coloured fish trajectory paths over a darkened reef frame"></div>
+          <figcaption class="mt-3">
+            <h3 class="font-semibold tracking-tight">Trajectories</h3>
+            <p class="mt-1 max-w-[60ch] text-sm leading-relaxed text-base-content/60">
+              Every path carries speed, heading, turning angle and quality flags. Speed is the
+              first derivative of the smoothed centre, never the raw box.
+            </p>
+          </figcaption>
+        </figure>
+
+        <figure class="reveal">
+          <div class="grid grid-cols-2 gap-2">
+            <div class="media-frame">
+              <img class="aspect-video w-full object-cover" src="assets/ab_raw.jpg" alt="Raw turbid underwater frame, heavy blue-green cast">
+              <figcaption class="border-t border-base-content/10 px-3 py-2 font-mono text-[0.7rem] uppercase tracking-widest text-base-content/50">Raw</figcaption>
+            </div>
+            <div class="media-frame">
+              <img class="aspect-video w-full object-cover" src="assets/ab_restored.jpg" alt="The same frame after the restoration chain, colour cast reduced">
+              <figcaption class="border-t border-base-content/10 px-3 py-2 font-mono text-[0.7rem] uppercase tracking-widest text-base-content/50">Restored</figcaption>
+            </div>
+          </div>
+          <figcaption class="mt-3">
+            <h3 class="font-semibold tracking-tight">Restoration, measured</h3>
+            <p class="mt-1 max-w-[60ch] text-sm leading-relaxed text-base-content/60">
+              Detection runs on both, on 60 held-out frames per run, so the gate is a measurement
+              rather than a claim. On a clear clip, forced restoration mostly adds reef texture,
+              which is why the gate leaves it off there.
+            </p>
+          </figcaption>
         </figure>
       </div>
     </div>
   </section>
 
-  <section class="thesis">
-    <div class="wrap reveal">
-      <p>Most underwater-CV demos end at boxes on fish.</p>
-      <p class="sub">The scarce, expensive part is everything after: turning boxes into repaired
-        trajectories, and trajectories into quantities an oceanographer or a data analyst can act on.
-        SHOAL weights its effort there.</p>
+  <!-- ===================== rigor ===================== -->
+  <section id="rigor" class="border-t border-base-content/10 bg-base-200">
+    <div class="mx-auto max-w-6xl px-5 py-16 sm:px-6 lg:py-24">
+      <h2 class="reveal max-w-[30ch] text-3xl font-semibold tracking-tight sm:text-4xl">
+        Every number traces to a computation. Where the method is thin, the interface says so.
+      </h2>
+
+      <div class="mt-12 grid gap-x-14 border-t border-base-content/15 md:grid-cols-2">
+        <div class="reveal flex gap-4 border-b border-base-content/10 py-6">
+          <svg class="mt-0.5 size-5 shrink-0 fill-primary"><use href="#i-wave"/></svg>
+          <div>
+            <h3 class="font-semibold tracking-tight">Calibrated, not guessed</h3>
+            <p class="mt-1.5 text-sm leading-relaxed text-base-content/60">
+              The visibility index weights are fit to one clear and one turbid anchor clip, with an
+              ordering check that the clear anchor must score higher. The anchor values are written to disk.
+            </p>
+          </div>
+        </div>
+        <div class="reveal flex gap-4 border-b border-base-content/10 py-6">
+          <svg class="mt-0.5 size-5 shrink-0 fill-primary"><use href="#i-cross"/></svg>
+          <div>
+            <h3 class="font-semibold tracking-tight">Restoration proves itself</h3>
+            <p class="mt-1.5 text-sm leading-relaxed text-base-content/60">
+              Detection runs twice per sampled frame, raw and restored. Enhancement time is measured
+              at roughly 125 ms per 720p frame on CPU, reported as the real figure rather than a target.
+            </p>
+          </div>
+        </div>
+        <div class="reveal flex gap-4 border-b border-base-content/10 py-6">
+          <svg class="mt-0.5 size-5 shrink-0 fill-primary"><use href="#i-chart"/></svg>
+          <div>
+            <h3 class="font-semibold tracking-tight">Bounded abundance</h3>
+            <p class="mt-1.5 text-sm leading-relaxed text-base-content/60">
+              MaxN, the standard metric in remote underwater video surveys, sits next to the raw
+              track count. The gap between them is shown, not hidden.
+            </p>
+          </div>
+        </div>
+        <div class="reveal flex gap-4 border-b border-base-content/10 py-6">
+          <svg class="mt-0.5 size-5 shrink-0 fill-primary"><use href="#i-shield"/></svg>
+          <div>
+            <h3 class="font-semibold tracking-tight">The honesty guard</h3>
+            <p class="mt-1.5 text-sm leading-relaxed text-base-content/60">
+              With one collapsed fish class, a diversity index carries no information, so the panel
+              greys itself out. It returns the moment a species head is added.
+            </p>
+          </div>
+        </div>
+        <div class="reveal flex gap-4 border-b border-base-content/10 py-6">
+          <svg class="mt-0.5 size-5 shrink-0 fill-primary"><use href="#i-map"/></svg>
+          <div>
+            <h3 class="font-semibold tracking-tight">The camera-motion guard</h3>
+            <p class="mt-1.5 text-sm leading-relaxed text-base-content/60">
+              Global motion is estimated from tracked features. When the rig is not static, the
+              residency and flow figures are labelled as image coordinates, not fixed-world.
+            </p>
+          </div>
+        </div>
+        <div class="reveal flex gap-4 border-b border-base-content/10 py-6">
+          <svg class="mt-0.5 size-5 shrink-0 fill-primary"><use href="#i-repeat"/></svg>
+          <div>
+            <h3 class="font-semibold tracking-tight">Reproducible by construction</h3>
+            <p class="mt-1.5 text-sm leading-relaxed text-base-content/60">
+              Every run writes a manifest with the resolved config, the library versions, and the
+              detector and tracker code path it actually took.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="reveal mt-8 flex flex-wrap gap-x-6 gap-y-1.5 font-mono text-xs text-base-content/40">
+        <span>RTX 3050 6GB</span>
+        <span>torch 2.14.0</span>
+        <span>ultralytics 8.4.142</span>
+        <span>movingpandas 0.23.0</span>
+        <span>python 3.12.13</span>
+        <span>29 tests passing</span>
+      </div>
     </div>
   </section>
 
-  <section id="pipeline">
-    <div class="wrap">
-      <div class="pipe-head reveal">
-        <h2>Ten stages, one dataframe contract between each.</h2>
-        <p>Detection and species identification are decoupled on purpose: the detector runs single
-          class and high recall so the tracker has one stable job.</p>
+  <!-- ===================== outputs ===================== -->
+  <section id="outputs" class="border-t border-base-content/10">
+    <div class="mx-auto max-w-6xl px-5 py-16 sm:px-6 lg:py-24">
+      <div class="reveal max-w-[52ch]">
+        <h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">Four sequences, run end to end.</h2>
+        <p class="mt-4 text-base leading-relaxed text-base-content/65">
+          The turbid clip below stays under the restoration gate on every frame.
+        </p>
       </div>
-      <div class="pipe">
-        <div class="step reveal" style="--i:0"><div class="k">01</div><h3>Ingest</h3><p>Real timestamps, plus a measured camera-motion guard.</p></div>
-        <div class="step reveal" style="--i:1"><div class="k">02</div><h3>Visibility</h3><p>Per-frame turbidity index, calibrated against anchor clips.</p></div>
-        <div class="step reveal" style="--i:2"><div class="k">03</div><h3>Restore</h3><p>Adaptive enhancement that fires only below the gate.</p></div>
-        <div class="step reveal" style="--i:3"><div class="k">04</div><h3>Detect</h3><p>Single class, high recall, a three-rung fallback chain.</p></div>
-        <div class="step reveal" style="--i:4"><div class="k">05</div><h3>Track</h3><p>BoT-SORT with Re-ID, tuned for shoaling motion.</p></div>
-        <div class="step reveal" style="--i:5"><div class="k">06</div><h3>Repair</h3><p>Smoothing, bounded gap-fill, conservative stitching, quality flags.</p></div>
-        <div class="step reveal" style="--i:6"><div class="k">07</div><h3>Trajectory</h3><p>MovingPandas: residency, stops, activity nodes, flows.</p></div>
-        <div class="step reveal" style="--i:7"><div class="k">08</div><h3>Behaviour</h3><p>State segmentation from the clip's own kinematic percentiles.</p></div>
-        <div class="step reveal" style="--i:8"><div class="k">09</div><h3>Ecology</h3><p>MaxN, diversity with intervals, and the honesty guard.</p></div>
-        <div class="step reveal" style="--i:9"><div class="k">10</div><h3>Export</h3><p>CSV, GeoJSON, and MOTChallenge for independent scoring.</p></div>
+
+      <figure class="reveal mt-10">
+        <div class="media-frame"><img class="w-full" src="assets/visibility.png" alt="Per-frame visibility score for the turbid clip, staying under the restoration gate for the whole clip"></div>
+        <figcaption class="mt-3 max-w-[60ch] text-sm text-base-content/55">
+          Per-frame visibility for <span class="font-mono text-base-content/75">reef_turbid_matched</span>.
+          The marked band is the frames the gate sends through restoration.
+        </figcaption>
+      </figure>
+
+      <div class="reveal mt-12 overflow-x-auto">
+        <table class="w-full min-w-[36rem] border-collapse text-sm">
+          <thead>
+            <tr class="border-b border-base-content/15 text-left font-mono text-xs uppercase tracking-wider text-base-content/45">
+              <th class="py-3 pr-4 font-medium">clip</th>
+              <th class="py-3 px-4 text-right font-medium">frames</th>
+              <th class="py-3 px-4 text-right font-medium">camera drift</th>
+              <th class="py-3 px-4 text-right font-medium">visibility</th>
+              <th class="py-3 px-4 text-right font-medium">MaxN</th>
+              <th class="py-3 pl-4 text-right font-medium">tracks</th>
+            </tr>
+          </thead>
+          <tbody class="[&_td]:py-3.5 [&_tr]:border-b [&_tr]:border-base-content/10">
+            <tr>
+              <td class="pr-4 font-medium">reef_clear</td>
+              <td class="px-4 text-right font-mono tnum text-base-content/70">772</td>
+              <td class="px-4 text-right font-mono tnum text-base-content/70">96%</td>
+              <td class="px-4 text-right font-mono tnum text-base-content/70">0.70</td>
+              <td class="px-4 text-right font-mono tnum">20</td>
+              <td class="pl-4 text-right font-mono tnum">67</td>
+            </tr>
+            <tr>
+              <td class="pr-4 font-medium">reef_turbid_matched</td>
+              <td class="px-4 text-right font-mono tnum text-base-content/70">772</td>
+              <td class="px-4 text-right font-mono tnum text-base-content/70">62%</td>
+              <td class="px-4 text-right font-mono tnum text-base-content/70">0.29</td>
+              <td class="px-4 text-right font-mono tnum">20</td>
+              <td class="pl-4 text-right font-mono tnum">64</td>
+            </tr>
+            <tr>
+              <td class="pr-4 font-medium">anemone_static</td>
+              <td class="px-4 text-right font-mono tnum text-base-content/70">955</td>
+              <td class="px-4 text-right font-mono tnum text-base-content/70">35%</td>
+              <td class="px-4 text-right font-mono tnum text-base-content/70">0.77</td>
+              <td class="px-4 text-right font-mono tnum">6</td>
+              <td class="pl-4 text-right font-mono tnum">17</td>
+            </tr>
+            <tr>
+              <td class="pr-4 font-medium">reef_snapper</td>
+              <td class="px-4 text-right font-mono tnum text-base-content/70">749</td>
+              <td class="px-4 text-right font-mono tnum text-base-content/70">120%</td>
+              <td class="px-4 text-right font-mono tnum text-base-content/70">0.67</td>
+              <td class="px-4 text-right font-mono tnum">13</td>
+              <td class="pl-4 text-right font-mono tnum">41</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
+      <p class="reveal mt-6 max-w-[64ch] text-sm text-base-content/55">
+        These are open-license stock clips, so the camera-motion guard flags every one. The plan's
+        fixed-station datasets are Kaggle-gated; the fetch script pulls them once a token is present.
+      </p>
     </div>
   </section>
 
-  <section class="after">
-    <div class="wrap">
-      <div class="after-grid">
-        <div class="after-left">
-          <div class="eyebrow reveal">What SHOAL produces</div>
-          <h2 class="reveal" style="--i:1">The analytics layer is the contribution.</h2>
-          <p class="reveal" style="--i:2">One thirteen-second reef clip yields 75 repaired trajectories, each carrying
-            speed, sinuosity and quality flags. From there the pipeline computes what a survey reports.</p>
-          <div class="bounds reveal" style="--i:3">
-            <div class="row">
-              <div class="lbl">MaxN</div>
-              <div class="track"><div class="fill maxn" style="--v:0.30"></div></div>
-              <div class="v">20</div>
-            </div>
-            <div class="row">
-              <div class="lbl">tracks</div>
-              <div class="track"><div class="fill trk" style="--v:1"></div></div>
-              <div class="v">67</div>
-            </div>
-            <p class="cap">MaxN is the conservative lower bound. The unique-track count is the upper
-              bound, sensitive to ID fragmentation. Both are shown, both labelled.</p>
+  <!-- ===================== downstream ===================== -->
+  <section class="border-t border-base-content/10 bg-base-200">
+    <div class="mx-auto max-w-6xl px-5 py-16 sm:px-6 lg:py-24">
+      <h2 class="reveal max-w-[24ch] text-3xl font-semibold tracking-tight sm:text-4xl">
+        Built for surveys that already exist.
+      </h2>
+      <p class="reveal mt-4 max-w-[52ch] text-base leading-relaxed text-base-content/65">
+        The same trajectory table feeds four kinds of work, each with a metric the field already uses.
+      </p>
+
+      <div class="reveal mt-12 grid gap-3 md:grid-cols-6">
+        <div class="relative overflow-hidden rounded-box border border-base-content/12 bg-base-100 p-7 md:col-span-4">
+          <div class="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/15 via-transparent to-transparent"></div>
+          <div class="relative">
+            <p class="font-mono text-xs uppercase tracking-wider text-primary">Fisheries management</p>
+            <h3 class="mt-3 text-xl font-semibold tracking-tight">Abundance in the metric your surveys already report</h3>
+            <p class="mt-3 max-w-[46ch] text-sm leading-relaxed text-base-content/65">
+              MaxN per species per frame, with the unique-track upper bound alongside it. The gap
+              between the two is the honest part, and it is shown rather than smoothed away.
+            </p>
           </div>
         </div>
 
-        <div class="figures">
-          <figure class="figure reveal">
-            <img src="assets/residency.png" alt="Residency heatmap: two bright occupancy hotspots over a dark anemone scene">
-            <figcaption>
-              <h3>Residency</h3>
-              <p>Time-weighted occupancy over the frame, from the <span class="mono">anemone_static</span>
-                sequence. Two clownfish, two clear hotspots. Legible in one glance, no explanation needed.</p>
-            </figcaption>
-          </figure>
-
-          <figure class="figure reveal">
-            <img src="assets/trajectories.png" alt="Seventy-five coloured fish trajectory paths over a darkened reef frame">
-            <figcaption>
-              <h3>Trajectories</h3>
-              <p>Every path carries speed, heading, turning angle and quality flags. Speed is the
-                first derivative of the smoothed centre, never the raw box.</p>
-            </figcaption>
-          </figure>
-
-          <figure class="figure reveal">
-            <div class="ab-pair">
-              <figure><img src="assets/ab_raw.jpg" alt="Raw turbid underwater frame, heavy blue-green cast"><figcaption>RAW</figcaption></figure>
-              <figure><img src="assets/ab_restored.jpg" alt="Same frame after the restoration chain, colour cast reduced"><figcaption>RESTORED</figcaption></figure>
-            </div>
-            <figcaption>
-              <h3>Restoration, measured</h3>
-              <p>A live A/B on 60 held-out frames per run. On a clear clip, forced restoration adds
-                150 detections that are mostly reef texture, which is why the gate leaves it off there.</p>
-            </figcaption>
-          </figure>
+        <div class="rounded-box border border-base-content/12 bg-base-100 p-7 md:col-span-2">
+          <p class="font-mono text-xs uppercase tracking-wider text-base-content/50">Biodiversity studies</p>
+          <h3 class="mt-3 text-lg font-semibold tracking-tight">Shannon and Pielou with bootstrap intervals</h3>
+          <p class="mt-2 text-sm leading-relaxed text-base-content/65">
+            Computed on per-species MaxN, not raw per-detection counts.
+          </p>
         </div>
+
+        <div class="rounded-box border border-base-content/12 bg-base-100 p-7 md:col-span-2">
+          <p class="font-mono text-xs uppercase tracking-wider text-base-content/50">Aquaculture</p>
+          <h3 class="mt-3 text-lg font-semibold tracking-tight">Behavioural state and startle timing from passive video</h3>
+          <p class="mt-2 text-sm leading-relaxed text-base-content/65">
+            Non-invasive. No tagging, no handling.
+          </p>
+        </div>
+
+        <div class="relative overflow-hidden rounded-box border border-base-content/12 bg-base-100 p-7 md:col-span-4">
+          <div class="pointer-events-none absolute inset-0 bg-gradient-to-bl from-primary/8 via-transparent to-transparent"></div>
+          <div class="relative">
+            <p class="font-mono text-xs uppercase tracking-wider text-base-content/50">Ocean observation</p>
+            <h3 class="mt-3 text-lg font-semibold tracking-tight">Standard exports now, Darwin Core next</h3>
+            <p class="mt-2 max-w-[46ch] text-sm leading-relaxed text-base-content/65">
+              GeoJSON and MOTChallenge today, so an external scorer can check the tracking; a
+              GBIF-ready occurrence file lands in Phase 2.
+            </p>
+          </div>
+        </div>
+
+        <figure class="overflow-hidden rounded-box border border-base-content/12 bg-base-100 md:col-span-6">
+          <img class="aspect-[24/7] w-full object-cover object-center" src="assets/trajectories.png" alt="Fish trajectory paths across a reef frame">
+          <figcaption class="border-t border-base-content/12 px-5 py-3 text-sm text-base-content/60">
+            Movement patterns, not just detections. One table, every panel above.
+          </figcaption>
+        </figure>
       </div>
     </div>
   </section>
 
-  <section id="rigor" class="rigor">
-    <div class="wrap">
-      <div class="eyebrow reveal">Why it holds up</div>
-      <h2 class="reveal" style="--i:1">Every number traces to a computation. Where the method is thin, the interface says so.</h2>
-      <div class="rlist">
-        <div class="ritem reveal"><svg class="ico"><use href="#i-wave"/></svg><div>
-          <h3>Calibrated, not guessed</h3>
-          <p>The visibility index weights are fit to one clear and one turbid anchor clip, with an
-            ordering check that the clear anchor must score higher. The anchor values are written to disk.</p></div></div>
-        <div class="ritem reveal"><svg class="ico"><use href="#i-cross"/></svg><div>
-          <h3>Restoration proves itself</h3>
-          <p>Detection runs twice per sample frame, raw and restored. Enhancement time is measured
-            at roughly 125 ms per 720p frame on CPU, reported as the real figure rather than a target.</p></div></div>
-        <div class="ritem reveal"><svg class="ico"><use href="#i-chart"/></svg><div>
-          <h3>Bounded abundance</h3>
-          <p>MaxN, the standard metric in remote underwater video surveys, sits next to the raw
-            track count. The gap between them is shown, not hidden.</p></div></div>
-        <div class="ritem reveal"><svg class="ico"><use href="#i-shield"/></svg><div>
-          <h3>The honesty guard</h3>
-          <p>With one collapsed fish class, a diversity index carries no information, so the panel
-            greys itself out. It returns the moment a species head is added.</p></div></div>
-        <div class="ritem reveal"><svg class="ico"><use href="#i-map"/></svg><div>
-          <h3>The camera-motion guard</h3>
-          <p>Global motion is estimated from tracked features. When the rig is not static, the
-            residency and flow figures are labelled as image coordinates, not fixed-world.</p></div></div>
-        <div class="ritem reveal"><svg class="ico"><use href="#i-flow"/></svg><div>
-          <h3>Reproducible by construction</h3>
-          <p>Every run writes a manifest with the resolved config, the library versions, and the
-            detector and tracker code path it actually took.</p></div></div>
+  <!-- ===================== close ===================== -->
+  <section class="border-t border-base-content/10">
+    <div class="mx-auto max-w-6xl px-5 py-16 sm:px-6 lg:py-24">
+      <h2 class="reveal text-3xl font-semibold tracking-tight sm:text-4xl">The short version.</h2>
+      <div class="mt-8 grid max-w-[62ch] gap-5">
+        <p class="reveal text-lg leading-relaxed">
+          <span class="text-base-content/45">The problem.</span>
+          Underwater video is abundant and cheap. Analysis of it is scarce and expensive.
+        </p>
+        <p class="reveal text-lg leading-relaxed" style="--i:1">
+          <span class="text-base-content/45">What was built.</span>
+          A pipeline from raw video to MaxN abundance, Shannon diversity with confidence intervals,
+          and behavioural state, exported in standard formats.
+        </p>
+        <p class="reveal text-lg leading-relaxed" style="--i:2">
+          <span class="text-base-content/45">Why it holds up.</span>
+          Every number is measured. The restoration module proves its own value with a live A/B.
+          Uncertain results say so.
+        </p>
       </div>
-      <div class="envstrip reveal">
-        <span><b>RTX 3050 6GB</b></span><span><b>torch</b> 2.14.0</span><span><b>ultralytics</b> 8.4.142</span>
-        <span><b>movingpandas</b> 0.23.0</span><span><b>python</b> 3.12.13</span><span><b>tests</b> 29 passing</span>
-      </div>
-    </div>
-  </section>
 
-  <section id="outputs">
-    <div class="wrap">
-      <div class="out-head reveal">
-        <h2>Four sequences, run end to end.</h2>
-        <p>The turbid clip below falls under the restoration gate on every frame.</p>
-      </div>
-      <div class="vischart reveal"><img src="assets/visibility.png" alt="Per-frame visibility score for the turbid clip, staying under the 0.55 gate for the whole clip"></div>
-      <p class="visnote reveal">Per-frame visibility for <span class="mono">reef_turbid_matched</span>. The amber
-        band marks frames the gate sends through restoration.</p>
-      <table class="clips reveal">
-        <thead><tr><th>clip</th><th>frames</th><th>camera drift</th><th>visibility</th><th>MaxN</th><th>tracks</th></tr></thead>
-        <tbody>
-          <tr><td class="name">reef_clear</td><td class="num">772</td><td class="num">96%</td><td class="num">0.70</td><td class="num">20</td><td class="num">67</td></tr>
-          <tr><td class="name">reef_turbid_matched</td><td class="num">772</td><td class="num">62%</td><td class="num">0.29</td><td class="num">20</td><td class="num">64</td></tr>
-          <tr><td class="name">anemone_static</td><td class="num">955</td><td class="num">35%</td><td class="num">0.77</td><td class="num">6</td><td class="num">17</td></tr>
-          <tr><td class="name">reef_snapper</td><td class="num">749</td><td class="num">120%</td><td class="num">0.67</td><td class="num">13</td><td class="num">41</td></tr>
-        </tbody>
-      </table>
-      <p class="tablenote reveal">These are open-license stock clips, so the camera-motion guard flags every
-        one. The plan's fixed-station datasets are Kaggle-gated; the fetch script pulls them once a token is present.</p>
-    </div>
-  </section>
-
-  <section class="downstream">
-    <div class="wrap">
-      <div class="down-head reveal">
-        <h2>Built for the people named in the brief.</h2>
-      </div>
-      <div class="down reveal">
-        <div class="cell s3">
-          <div class="k">Fisheries management</div>
-          <h3>Abundance in the metric your surveys already report</h3>
-          <p>MaxN per species per frame, with the unique-track upper bound alongside it.</p>
-        </div>
-        <div class="cell s3 media">
-          <img src="assets/trajectories.png" alt="Trajectory paths across a reef frame">
-          <div class="tag">movement patterns, not just paths</div>
-        </div>
-        <div class="cell s2">
-          <div class="k">Biodiversity studies</div>
-          <h3>Shannon and Pielou with bootstrap intervals</h3>
-          <p>Computed on per-species MaxN, not per-detection counts.</p>
-        </div>
-        <div class="cell s2">
-          <div class="k">Aquaculture</div>
-          <h3>Behavioural state and startle timing from passive video</h3>
-          <p>Non-invasive. No tagging, no handling.</p>
-        </div>
-        <div class="cell s2">
-          <div class="k">Ocean observation</div>
-          <h3>Trajectory and tracking exports today, Darwin Core next</h3>
-          <p>GeoJSON and MOTChallenge now; a GBIF-ready occurrence file in Phase 2.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="close">
-    <div class="wrap">
-      <h2 class="reveal">The short version.</h2>
-      <div class="three">
-        <p class="reveal"><span>The problem.</span> Underwater video is abundant and cheap. Analysis of it is scarce and expensive.</p>
-        <p class="reveal" style="--i:1"><span>What was built.</span> A pipeline from raw video to MaxN abundance, Shannon diversity with confidence intervals, and behavioural state, exported in standard formats.</p>
-        <p class="reveal" style="--i:2"><span>Why it holds up.</span> Every number is measured. The restoration module proves its own value with a live A/B. Uncertain results say so.</p>
-      </div>
-      <div class="cta-row reveal" style="--i:3">
-        <a class="btn btn-primary" href="https://github.com/DaganGera/shoal">
-          <svg class="ico"><use href="#i-gh"/></svg> View on GitHub
+      <div class="reveal mt-10" style="--i:3">
+        <a href="https://github.com/DaganGera/shoal" class="btn btn-primary gap-2">
+          <svg class="size-4 fill-current"><use href="#i-gh"/></svg>
+          View on GitHub
         </a>
       </div>
-      <div class="roadmap reveal" style="--i:4">
-        <div class="k">Phase 2</div>
-        <ul>
-          <li>HMM behavioural state segmentation</li>
-          <li>Polarisation and the shoal-versus-school discriminator</li>
-          <li>Regional species head with track-level voting</li>
-          <li>HOTA benchmark against ground truth</li>
+
+      <div class="reveal mt-14 border-t border-base-content/10 pt-8" style="--i:4">
+        <p class="font-mono text-xs uppercase tracking-[0.16em] text-base-content/45">Phase 2</p>
+        <ul class="mt-4 grid max-w-2xl gap-y-2.5 gap-x-8 sm:grid-cols-2">
+          <li class="relative pl-5 text-sm text-base-content/65"><span class="absolute left-0 font-mono text-primary">+</span>HMM behavioural state segmentation</li>
+          <li class="relative pl-5 text-sm text-base-content/65"><span class="absolute left-0 font-mono text-primary">+</span>Polarisation and the shoal-versus-school discriminator</li>
+          <li class="relative pl-5 text-sm text-base-content/65"><span class="absolute left-0 font-mono text-primary">+</span>Regional species head with track-level voting</li>
+          <li class="relative pl-5 text-sm text-base-content/65"><span class="absolute left-0 font-mono text-primary">+</span>HOTA benchmark against ground truth</li>
         </ul>
       </div>
     </div>
@@ -545,12 +519,17 @@
 
 </main>
 
-<footer>
-  <div class="wrap foot">
-    <span class="brand"><svg class="ico" style="display:inline;vertical-align:-2px;color:var(--amber)"><use href="#i-fish"/></svg> SHOAL</span>
-    <span class="mono">Challenge CHE01</span>
-    <a href="https://github.com/DaganGera/shoal">github.com/DaganGera/shoal</a>
-    <span>AGPL-3.0. The detector sits behind an interface; swapping it is a config change.</span>
+<!-- ===================== footer ===================== -->
+<footer class="border-t border-base-content/10">
+  <div class="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-5 py-10 text-sm text-base-content/50 sm:px-6">
+    <span class="flex items-center gap-2 font-medium text-base-content/70">
+      <svg class="size-4 fill-primary"><use href="#i-fish"/></svg> SHOAL
+    </span>
+    <span class="font-mono text-xs">Challenge CHE01</span>
+    <a href="https://github.com/DaganGera/shoal" class="transition-colors hover:text-base-content">github.com/DaganGera/shoal</a>
+    <span class="basis-full text-xs text-base-content/40 sm:basis-auto">
+      AGPL-3.0. The detector sits behind an interface; swapping it is a config change.
+    </span>
   </div>
 </footer>
 
@@ -558,21 +537,19 @@
   (function () {
     var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     var els = document.querySelectorAll(".reveal");
+    var show = function (el) { el.classList.add("in"); };
     if (reduce || !("IntersectionObserver" in window)) {
-      els.forEach(function (el) { el.classList.add("in"); });
-      document.querySelectorAll(".bounds").forEach(function (el) { el.classList.add("in"); });
+      els.forEach(show);
       return;
     }
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) {
-        if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+        if (e.isIntersecting) { show(e.target); io.unobserve(e.target); }
       });
-    }, { threshold: 0.16, rootMargin: "0px 0px -8% 0px" });
+    }, { threshold: 0.12, rootMargin: "0px 0px -5% 0px" });
     els.forEach(function (el) { io.observe(el); });
-    var bio = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); bio.unobserve(e.target); } });
-    }, { threshold: 0.4 });
-    document.querySelectorAll(".bounds").forEach(function (el) { bio.observe(el); });
+    // failsafe: never leave content hidden if the observer misfires
+    setTimeout(function () { els.forEach(show); }, 3000);
   })();
 </script>
 

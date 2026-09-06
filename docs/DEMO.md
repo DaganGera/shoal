@@ -22,6 +22,19 @@ Each run writes a self-contained `outputs/<run_id>/` (annotated video, all CSVs,
 GeoJSON, MOT file, residency PNG, `run.json` provenance). The dashboard reads a run
 directory; pick the run in the sidebar.
 
+## Run someone's own clip, live
+
+The dashboard sidebar has **"Process a new clip"**: drop in an MP4 (or point at a
+path), keep **Quick preview** ticked, click **Run pipeline**. The pipeline log
+streams into the page; on success the new run is selected automatically. Quick
+preview caps at 150 frames so a mentor's clip finishes in about 30 seconds on the
+GPU. Untick it for the whole clip. Equivalent CLI:
+
+```bash
+uv run shoal-run --clip /path/to/their_video.mp4          # full clip
+uv run shoal-run --clip x.mp4 --max-frames 150 --no-ablation --run-id x_quick
+```
+
 ## Which clip shows what
 
 | Run | Lead with | Why |

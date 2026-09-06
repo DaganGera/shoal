@@ -17,6 +17,10 @@ Tabs (Phase 1 = 1..5; 6 and 7 are Phase-2 placeholders kept for structure):
 from __future__ import annotations
 
 import json
+import os
+import subprocess
+import sys
+from datetime import datetime
 from pathlib import Path
 
 import cv2
@@ -28,6 +32,7 @@ import streamlit as st
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 OUTPUTS = REPO_ROOT / "outputs"
+UPLOAD_DIR = REPO_ROOT / "data" / "clips" / "uploads"
 
 st.set_page_config(page_title="SHOAL", layout="wide", page_icon="🐟")
 
@@ -83,20 +88,88 @@ def units_note(scale_px_per_m: float | None) -> str:
     return "no scale supplied — distances in **pixels**, speeds in **px/s** and **body-lengths/s**"
 
 
+def run_pipeline_ui(clip_path: Path, run_id: str, max_frames: int | None,
+                    device: str, ablation: bool) -> bool:
+    """Run `python -m shoal.pipeline` as a subprocess, streaming its log into the
+    page. Returns True when outputs/<run_id>/results.json was produced."""
+    cmd = [sys.executable, "-m", "shoal.pipeline", "--clip", str(clip_path),
+           "--run-id", run_id, "--device", device]
+    if max_frames:
+        cmd += ["--max-frames", str(int(max_frames))]
+    if not ablation:
+        cmd += ["--no-ablation"]
+
+    with st.status(f"Processing {clip_path.name} ...", expanded=True) as status:
+        log_box = st.empty()
+        proc = subprocess.Popen(
+            cmd, cwd=str(REPO_ROOT), stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            text=True, bufsize=1, env={**os.environ, "PYTHONUNBUFFERED": "1", "UV_LINK_MODE": "copy"},
+        )
+        tail: list[str] = []
+        assert proc.stdout is not None
+        for line in proc.stdout:
+            line = line.rstrip()
+            if not line or "Stone Soup" in line or "warnings.warn" in line \
+                    or "not enough matching" in line or "nonzero nanoseconds" in line:
+                continue
+            tail.append(line.split(" INFO ", 1)[-1] if " INFO " in line else line)
+            log_box.code("\n".join(tail[-16:]), language="text")
+        rc = proc.wait()
+        ok = rc == 0 and (OUTPUTS / run_id / "results.json").exists()
+        if ok:
+            status.update(label=f"Done: {run_id}", state="complete", expanded=False)
+        else:
+            status.update(label=f"Pipeline exited with code {rc} (no results.json)", state="error")
+    return ok
+
+
 # --------------------------------------------------------------------------- #
 # sidebar
 # --------------------------------------------------------------------------- #
 runs = list_runs()
-if not runs:
-    st.title("SHOAL")
-    st.warning("No completed runs in `outputs/`. Run:\n\n"
-               "```\nuv run shoal-run --clip data/clips/reef_clear.mp4\n```")
-    st.stop()
 
 with st.sidebar:
     st.markdown("## SHOAL")
     st.caption("Spatio-temporal Habitat & Organism Analytics Layer")
-    run_id = st.selectbox("Run", runs)
+
+    with st.expander("▶  Process a new clip", expanded=True):
+        up = st.file_uploader("Video file", type=["mp4", "mov", "avi", "mkv", "webm", "m4v"])
+        path_in = st.text_input("...or a path already on disk",
+                                placeholder="data/clips/reef_clear.mp4")
+        c1, c2 = st.columns(2)
+        quick = c1.checkbox("Quick preview", value=True,
+                            help="cap at the first 150 frames for a fast result")
+        dev = c2.selectbox("Device", ["auto", "cuda", "cpu"], index=0)
+        do_abl = st.checkbox("Also run the restoration A/B", value=False,
+                             help="adds ~40 s; the A/B tab needs this")
+        if st.button("Run pipeline", type="primary", width="stretch"):
+            src: Path | None = None
+            if up is not None:
+                UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+                src = UPLOAD_DIR / up.name
+                src.write_bytes(up.getbuffer())
+            elif path_in.strip():
+                p = Path(path_in.strip()).expanduser()
+                src = p if p.is_absolute() else (REPO_ROOT / p)
+            if src is None or not src.exists():
+                st.error("Choose a file or enter a path that exists.")
+            else:
+                rid = f"{src.stem}_{datetime.now():%m%d-%H%M%S}"
+                if run_pipeline_ui(src, rid, 150 if quick else None, dev, do_abl):
+                    list_runs.clear()
+                    load_run.clear()
+                    st.session_state["run_id"] = rid
+                    st.rerun()
+
+    runs = list_runs()
+    if not runs:
+        st.info("No completed runs yet. Use **Process a new clip** above, or run "
+                "`uv run shoal-run --clip data/clips/reef_clear.mp4` in a terminal.")
+        st.stop()
+
+    if st.session_state.get("run_id") not in runs:
+        st.session_state["run_id"] = runs[0]
+    run_id = st.selectbox("Run", runs, key="run_id")
     run = load_run(run_id)
     R = run["results"]
 

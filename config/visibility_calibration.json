@@ -1,0 +1,60 @@
+{
+  "calibrated": true,
+  "method": "anchor-fit: normalisation from 2-98 pctile union, weights from Cohen's d separation",
+  "generated_utc": "2026-09-06T12:24:47.341886+00:00",
+  "n_frames_per_anchor": 80,
+  "dark_channel_patch": 15,
+  "anchors": {
+    "clear": {
+      "clip": "reef_clear.mp4",
+      "components_median": {
+        "contrast": 31.5172,
+        "colour_cast": 61.3734,
+        "sharpness": 623.5066,
+        "haze": 6.2276
+      }
+    },
+    "turbid": {
+      "clip": "reef_turbid_matched.mp4",
+      "components_median": {
+        "contrast": 21.9241,
+        "colour_cast": 54.3866,
+        "sharpness": 82.8668,
+        "haze": 48.1945
+      }
+    }
+  },
+  "component_normalisation": {
+    "contrast": {
+      "lo": 15.6632,
+      "hi": 50.764,
+      "invert": false
+    },
+    "colour_cast": {
+      "lo": 44.1467,
+      "hi": 69.6856,
+      "invert": true
+    },
+    "sharpness": {
+      "lo": 24.5896,
+      "hi": 1767.2026,
+      "invert": false
+    },
+    "haze": {
+      "lo": 2.7503,
+      "hi": 72.6397,
+      "invert": true
+    }
+  },
+  "fusion_weights": {
+    "contrast": 0.1589,
+    "colour_cast": 0.0954,
+    "sharpness": 0.1729,
+    "haze": 0.5728
+  },
+  "_sanity": {
+    "fused_clear": 0.7065,
+    "fused_turbid": 0.2916,
+    "ordered_correctly": true
+  }
+}

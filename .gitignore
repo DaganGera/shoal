@@ -1,0 +1,24 @@
+# data + weights are fetched, never committed (plan §14)
+/data/
+/weights/
+/outputs/
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# os / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# keep the directory structure and any committed fixtures
+!/data/.gitkeep
+!/weights/.gitkeep
+!/outputs/.gitkeep

@@ -1,0 +1,115 @@
+# SHOAL pipeline configuration.
+#
+# Values here are DEFAULTS. Anything tuned against one specific clip belongs in a
+# clip-specific override file passed with `--override path.yaml` (deep-merged).
+# The rationale for every non-obvious value is inline, per SHOAL_build_plan.md §16
+# ("Put a docstring ... stating *why* the approach was chosen").
+
+run:
+  device: auto           # auto -> cuda if torch.cuda.is_available() else cpu (resolved + logged in code)
+  max_frames: null       # null = whole clip; set an int for fast iteration
+  frame_stride: 1        # process every Nth frame (1 = native cadence). Timestamps stay real-time.
+  seed: 20260906         # bootstrap / any stochastic step is seeded and the seed is logged
+
+ingest:
+  # Camera-motion guard. The spatial analytics (residency map, O/D flow matrix) are
+  # only physically meaningful for a fixed camera. We MEASURE global motion: sparse
+  # Shi-Tomasi features tracked with Lucas-Kanade, a partial-affine transform fit per
+  # sampled frame pair, then per-frame median translation and cumulative drift are
+  # compared to the thresholds below (fractions of the frame diagonal). Exceeding
+  # them does not stop the run - it raises a flag that the dashboard shows next to
+  # every spatial figure, so the limitation is visible rather than hidden.
+  camera_motion_guard:
+    enabled: true
+    max_features: 300
+    sample_stride: 3             # measure every Nth frame (cheap)
+    translation_frac_warn: 0.006 # per-frame median shift as fraction of frame diagonal
+    drift_frac_warn: 0.06        # cumulative shift as fraction of frame diagonal
+
+visibility:
+  # Fused-index weights live in the calibration file, NOT here - they must be fit
+  # against real anchor clips (`python -m shoal.calibrate`), never hand-chosen
+  # (plan §4.1, verification checklist item 1). If the calibration file is missing
+  # or marked uncalibrated, the pipeline still emits the four raw components but
+  # logs a loud warning and uses an explicitly-labelled provisional fusion.
+  calibration_file: config/visibility_calibration.json
+  dark_channel_patch: 15         # px; window for the dark-channel (haze) estimate
+
+restore:
+  # The GATE is the contribution (plan §4.2), not a speed hack. Restoration fires
+  # only when the fused visibility score < gate_threshold. Over-enhancing already
+  # clear frames adds halo artefacts on fish edges and measurably hurts detection -
+  # which is exactly what the A/B ablation (shoal.ablation) is there to show.
+  gate_threshold: 0.55
+  red_compensation_alpha: 1.0    # Ancuti-style recovery of the fast-attenuating red channel from green
+  grey_world_white_balance: true
+  clahe_clip: 2.0
+  clahe_grid: 8                  # CLAHE on the L channel only - avoids RGB colour-noise amplification
+  unsharp_amount: 0.6            # mild; restores edge definition lost to scattering
+  gamma_target_luma: 0.5         # drive gamma from measured frame luma toward this, not a constant
+
+detect:
+  # Confidence set LOW on purpose (plan §5). Turbid water depresses scores across the
+  # board; the tracker's low-score association stage (§6) is built to recover them.
+  conf: 0.20
+  iou: 0.6
+  imgsz: 640
+  max_det: 300
+  # The detector has ONE job: localise fish. Every fish-like class from the
+  # underlying model is collapsed to `fish`. Non-fish classes are dropped from the
+  # detection stream; they only re-enter via the Phase 2 species head.
+  fish_class_aliases:
+    - fish
+    - small fish
+    - small_fish
+    - serranidae
+    - scaridae
+    - chaetodontidae
+    - lutjanidae
+    - muraenidae
+    - haemulidae
+    - bolbometopon muricatum
+    - cheilinus undulatus
+    - cromileptes altivelis
+  keep_nonfish_classes: false
+
+track:
+  tracker_config: config/botsort_underwater.yaml
+  method: botsort               # Phase 1 primary. ByteTrack is the Phase 2 benchmark comparison arm.
+
+repair:
+  # Savitzky-Golay on x and y independently (plan §7). Window/order are validated
+  # against the clip frame rate at runtime: window odd, >= 5, and spanning <= ~0.4 s
+  # so genuine burst accelerations survive (a moving average would flatten them).
+  savgol_window: 9
+  savgol_polyorder: 2
+  max_gap_interpolate: 5        # frames; linear interp across gaps <= this, points flagged is_interpolated
+  max_gap_stitch: 15           # frames; link fragments separated by <= this when motion (and Re-ID, if on) agree
+  stitch_max_speed_px_s: 1200  # reject any stitch implying a physically implausible closing speed
+  min_track_frames: 15         # shorter tracks excluded from ecology metrics but counted in a shown "rejected" tally
+
+trajectory:
+  stop_max_diameter_px: 40     # MovingPandas TrajectoryStopDetector; tune per clip in an override
+  stop_min_duration_s: 1.2
+  dbscan_eps_px: 60            # activity-node clustering over stop points
+  dbscan_min_samples: 3
+  residency_bins: 96           # 2D occupancy histogram resolution along the long axis
+  residency_sigma_bins: 1.5    # Gaussian smoothing of the occupancy histogram (bins)
+
+behaviour:
+  # Phase 1 = rule-based classifier ONLY. The HMM (plan §9.1) is the Phase 2 headline
+  # method and replaces this. Cut-points are POPULATION PERCENTILES computed from the
+  # clip's own tracks at runtime, not hand-set absolutes, so they travel across clips.
+  method: rules
+  transit_speed_pct: 60        # >= this percentile of body-lengths/s -> transit / cruising
+  forage_turn_pct: 65          # >= this percentile of |turn angle| with low speed -> area-restricted search
+  escape_speed_pct: 95         # >= this percentile of BL/s together with high accel -> escape / startle
+
+ecology:
+  bootstrap_iters: 1000        # resample per-track species labels by their confidence, recompute H' each time
+  bootstrap_ci: 0.95
+  species_conf_floor: 0.35     # honesty guard (plan §10.4): below this mean track species conf -> diversity greyed out
+  maxn_smooth_frames: 1        # MaxN computed on a rolling window of this many frames (1 = strict single-frame max)
+
+export:
+  formats: [csv, geojson, mot]  # darwin_core (DwC) is Phase 2

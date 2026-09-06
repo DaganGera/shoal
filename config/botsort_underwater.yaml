@@ -1,0 +1,36 @@
+# BoT-SORT tracker configuration, tuned for underwater / shoaling fish.
+# Consumed by Ultralytics `model.track(tracker=...)`. Keys mirror the stock
+# ultralytics botsort.yaml; the underwater rationale (plan §6) is inline.
+#
+# shoal.track reconciles this file against the ultralytics default at load time and
+# logs any key the installed version does not recognise, so a version bump surfaces
+# loudly instead of being silently ignored.
+
+tracker_type: botsort
+
+# --- association thresholds ------------------------------------------------------
+track_high_thresh: 0.25   # first-stage association: confident detections
+track_low_thresh: 0.10    # second-stage association: KEEP LOW. Turbid water depresses
+                          # detection scores; ByteTrack's low-score stage was designed
+                          # to recover exactly these. This is the whole point in §6.
+new_track_thresh: 0.35    # RAISED vs default 0.25: suppresses spurious tracks born from
+                          # drifting particulate matter / marine snow.
+track_buffer: 75          # RAISED vs default 30 (~60-90 range): fish leave the frame and
+                          # come back; the default buffer kills the ID before they return.
+match_thresh: 0.85        # LOOSENED slightly vs default 0.8: erratic, non-linear fish
+                          # motion violates the constant-velocity Kalman assumption.
+fuse_score: true
+
+# --- global motion compensation ------------------------------------------------
+gmc_method: sparseOptFlow # compensate slight camera drift so track motion is fish motion,
+                          # not ego-motion. Set to `none` for a verified-static rig.
+
+# --- BoT-SORT Re-ID (Ultralytics June-2026 Re-ID stack) -----------------------
+with_reid: true           # appearance embeddings for identity stability under occlusion
+                          # and in crowded scenes - the defining failure mode for shoals.
+model: auto               # `auto` reuses the detector backbone features; a dedicated
+                          # ReID checkpoint path can be substituted here.
+proximity_thresh: 0.5     # IoU gate before appearance is considered
+appearance_thresh: 0.8    # KEPT AT DEFAULT (not loosened): in a dense shoal an ID swap is
+                          # unrecoverable, whereas the fragmentation a strict appearance gate
+                          # causes is exactly what shoal.repair's stitching stage repairs.

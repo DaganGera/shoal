@@ -1,0 +1,88 @@
+[project]
+name = "shoal"
+version = "0.1.0"
+description = "SHOAL — Spatio-temporal Habitat & Organism Analytics Layer. Turns underwater video into trajectory data and the ecological quantities a marine scientist already uses."
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = { text = "MIT" }
+authors = [{ name = "SHOAL build" }]
+
+# ---------------------------------------------------------------------------
+# Phase 1 dependencies. Every one of these is exercised by `python -m shoal.check`
+# and by the Phase 1 acceptance tests in SHOAL_build_plan.md §13.
+# ---------------------------------------------------------------------------
+dependencies = [
+    "numpy>=1.26,<3",
+    "pandas>=2.1",
+    "scipy>=1.11",              # Savitzky-Golay, bootstrap, signal utilities
+    "opencv-python-headless>=4.9",
+    "pyyaml>=6.0",
+    "ultralytics>=8.3.0",       # YOLO26 / YOLO11 + BoT-SORT Re-ID tracking
+    "lap>=0.5.12",              # linear assignment for the tracker association step
+    "torch>=2.2",               # backend for ultralytics; CUDA build resolved by uv
+    "torchvision>=0.17",
+    "shapely>=2.0",
+    "geopandas>=0.14",
+    "movingpandas>=0.18",       # trajectory objects, stop detection, aggregation
+    "scikit-learn>=1.4",        # DBSCAN for activity nodes / group membership
+    "streamlit>=1.36",
+    "plotly>=5.20",
+    "matplotlib>=3.8",          # residency heatmap rasterisation
+    "requests>=2.31",           # data + weight fetching
+    "tqdm>=4.66",
+]
+
+[project.optional-dependencies]
+# Phase 2 additions (SHOAL_build_plan.md §13 Phase 2 priority list). Installed by
+# default in dev via the `phase2` dependency-group below, but kept separable so a
+# resolution failure here never blocks the Phase 1 demo.
+phase2 = [
+    "hmmlearn>=0.3.2",         # HMM behavioural state segmentation
+    "motmetrics>=1.4.0",       # HOTA/MOTA/IDF1 benchmark
+    "pydeck>=0.9",             # animated TripsLayer trajectory playback
+    "reportlab>=4.1",          # auto-generated PDF report
+]
+
+[project.scripts]
+shoal-check = "shoal.check:main"
+shoal-fetch = "shoal.fetch:main"
+shoal-run = "shoal.pipeline:main"
+shoal-calibrate = "shoal.calibrate:main"
+
+[dependency-groups]
+dev = ["pytest>=8.0", "ruff>=0.5"]
+phase2 = ["shoal[phase2]"]
+
+[tool.uv]
+# RTX 3050 (Ampere, sm_86), CUDA 12.x user-mode driver present. `auto` lets uv
+# pick the matching CUDA wheel index; falls back to CPU wheels if none matches.
+torch-backend = "auto"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["shoal"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+# Deliberate patterns in this codebase, not oversights:
+#   BLE001  the detector/tracker fallback chains catch broad and "report + fall through"
+#   PLW1510 subprocess.run return codes are checked explicitly where it matters
+#   C408    dict(...) literals are kept for readable multi-line config blocks
+#   S603/S607 subprocess calls use fixed, non-user arg lists (ffmpeg/ffprobe/git)
+ignore = ["BLE001", "PLW1510", "C408", "S603", "S607", "S112", "PLC0206", "RUF059",
+          "RUF046",  # int(round(...)) is deliberate before a bitwise `| 1`
+          "DTZ005",  # run-id folder stamp uses local wall-clock on purpose
+          "RUF007"]  # zip(xs, xs[1:]) reads fine for the O/D transition pass
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = [
+    "ignore::UserWarning:movingpandas",
+    "ignore::DeprecationWarning",
+]

@@ -231,7 +231,7 @@ def run_ablation(detector: Detector, clip_path: str | Path, cfg: dict,
             tail = "Both signals point the same way: restoration hurts here."
         else:
             tail = ("Signals disagree (more detections but lower mean confidence, or vice "
-                    "versa) — inspect the raw/restored A/B frames before trusting either "
+                    "versa); inspect the raw/restored A/B frames before trusting either "
                     "direction. This is exactly why the gate is measured, not assumed.")
     verdict = prefix + headline + ". " + tail
 

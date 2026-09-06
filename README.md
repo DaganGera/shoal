@@ -38,6 +38,8 @@ uv run streamlit run app/dashboard.py
 
 Tests: `uv run pytest`.  Demo walkthrough + pitch: [`docs/DEMO.md`](docs/DEMO.md).
 
+Jury-facing landing page (static, no build): `python3 -m http.server 4173 --directory web` then open `http://localhost:4173`. See [`web/README.md`](web/README.md).
+
 ## Pipeline
 
 ```

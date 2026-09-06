@@ -18,6 +18,11 @@ __pycache__/
 .idea/
 .vscode/
 
+# agent skills installed locally via `skills add` (design guidance, not project code)
+/.agents/
+/.claude/
+/skills-lock.json
+
 # keep the directory structure and any committed fixtures
 !/data/.gitkeep
 !/weights/.gitkeep

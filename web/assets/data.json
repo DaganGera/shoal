@@ -1,0 +1,104 @@
+{
+  "reef_clear": {
+    "frames": 772,
+    "fps": 60,
+    "duration_s": 12.9,
+    "camera_static": false,
+    "camera_drift_pct": 96,
+    "visibility_mean": 0.7,
+    "maxn": 20,
+    "maxn_t": 0.3,
+    "tracks": 67,
+    "accepted": 67,
+    "rejected_short": 41,
+    "stitched": 39,
+    "interpolated": 479,
+    "behaviour": {
+      "foraging": 46,
+      "unknown": 41,
+      "transit": 20,
+      "escape": 1
+    },
+    "ablation": "On 60 sampled frames (9 below the visibility gate), restoration changed detections +73, mean confidence -0.059 (no ground truth on this clip, so no mAP). Signals disagree (more detections but lower mean confidence, or vice versa) \u2014 inspect the raw/restored A/B frames before trusting either direction. This is exactly why the gate is measured, not assumed.",
+    "enhance_ms": 125
+  },
+  "reef_turbid_matched": {
+    "frames": 772,
+    "fps": 60,
+    "duration_s": 12.9,
+    "camera_static": false,
+    "camera_drift_pct": 62,
+    "visibility_mean": 0.29,
+    "maxn": 20,
+    "maxn_t": 0.05,
+    "tracks": 64,
+    "accepted": 64,
+    "rejected_short": 40,
+    "stitched": 39,
+    "interpolated": 610,
+    "behaviour": {
+      "foraging": 44,
+      "unknown": 40,
+      "transit": 20
+    },
+    "ablation": "On 60 sampled frames (60 below the visibility gate), restoration changed detections +83, mean confidence -0.070 (no ground truth on this clip, so no mAP). Signals disagree (more detections but lower mean confidence, or vice versa) \u2014 inspect the raw/restored A/B frames before trusting either direction. This is exactly why the gate is measured, not assumed.",
+    "enhance_ms": 124
+  },
+  "anemone_static": {
+    "frames": 955,
+    "fps": 30,
+    "duration_s": 31.9,
+    "camera_static": false,
+    "camera_drift_pct": 35,
+    "visibility_mean": 0.77,
+    "maxn": 6,
+    "maxn_t": 2.77,
+    "tracks": 17,
+    "accepted": 17,
+    "rejected_short": 17,
+    "stitched": 8,
+    "interpolated": 132,
+    "behaviour": {
+      "unknown": 17,
+      "foraging": 13,
+      "transit": 4
+    },
+    "ablation": "On 60 sampled frames (0 below the visibility gate), restoration changed detections +4, mean confidence +0.009 (no ground truth on this clip, so no mAP). Both signals point the same way: restoration helps here.",
+    "enhance_ms": 126
+  },
+  "reef_snapper": {
+    "frames": 749,
+    "fps": 30,
+    "duration_s": 25.0,
+    "camera_static": false,
+    "camera_drift_pct": 120,
+    "visibility_mean": 0.67,
+    "maxn": 13,
+    "maxn_t": 15.4,
+    "tracks": 41,
+    "accepted": 41,
+    "rejected_short": 26,
+    "stitched": 22,
+    "interpolated": 137,
+    "behaviour": {
+      "unknown": 26,
+      "foraging": 24,
+      "transit": 16,
+      "escape": 1
+    },
+    "ablation": "On 60 sampled frames (0 below the visibility gate), restoration changed detections +150, mean confidence -0.026 (no ground truth on this clip, so no mAP). Signals disagree (more detections but lower mean confidence, or vice versa) \u2014 inspect the raw/restored A/B frames before trusting either direction. This is exactly why the gate is measured, not assumed.",
+    "enhance_ms": 126
+  },
+  "_derived": {
+    "dwell_reef_clear_s": 176,
+    "dwell_anemone_s": 93,
+    "n_trajectories": 75
+  },
+  "_env": {
+    "device": "NVIDIA RTX 3050 6GB",
+    "python": "3.12.13",
+    "torch": "2.14.0",
+    "ultralytics": "8.4.142",
+    "movingpandas": "0.23.0"
+  }
+}
